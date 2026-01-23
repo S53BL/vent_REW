@@ -61,26 +61,19 @@ void Lvgl_Touchpad_Read( lv_indev_drv_t * indev_drv, lv_indev_data_t * data )
     }
   }
 
-  // Debounce filter for state transitions
+  // Time-based debounce filter for state transitions
   if (touchpad_pressed && touchpad_cnt > 0) {
-    released_count = 0;
+    released_start_time = 0;
     if (abs(data->point.x - last_touch_x) < 20 && abs(data->point.y - last_touch_y) < 20) { // filter position noise
-      pressed_count++;
-      if (pressed_count >= (TOUCH_DEBOUNCE_MS / 50)) { // prilagodi za loop delay ~50ms
-        data->state = LV_INDEV_STATE_PRESSED;
-        last_touch_x = data->point.x;
-        last_touch_y = data->point.y;
-      } else {
-        data->state = LV_INDEV_STATE_RELEASED;
-      }
+      data->state = LV_INDEV_STATE_PRESSED;
+      last_touch_x = data->point.x;
+      last_touch_y = data->point.y;
     } else {
-      pressed_count = 0;
       data->state = LV_INDEV_STATE_RELEASED;
     }
   } else {
-    pressed_count = 0;
-    released_count++;
-    if (released_count >= (TOUCH_DEBOUNCE_MS / 50)) {
+    if (released_start_time == 0) released_start_time = millis();
+    if (millis() - released_start_time >= TOUCH_DEBOUNCE_MS) {
       data->state = LV_INDEV_STATE_RELEASED;
     } else {
       data->state = LV_INDEV_STATE_PRESSED;

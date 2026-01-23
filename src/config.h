@@ -208,7 +208,7 @@ enum ErrorFlag {
 #define ERR_FLOAT -999.0f
 #define ERR_INT -999
 
-#define LONG_PRESS_THRESHOLD 800
-#define TOUCH_DEBOUNCE_MS 500
+#define LONG_PRESS_THRESHOLD 500
+#define TOUCH_DEBOUNCE_MS 100
 
 #endif // CONFIG_H
