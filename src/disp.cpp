@@ -4,6 +4,7 @@
 #include <Display_ST7789.h>
 #include <Touch_CST328.h>
 #include <LVGL_Driver.h>
+#include <WiFi.h>
 
 // WiFi icons (16x16 px, placeholders - replace with actual PNG converted data)
 const uint8_t green_wifi_bin[] = { /* TODO: Replace with actual green WiFi icon bin data */ };
@@ -26,6 +27,7 @@ lv_obj_t* chart;
 lv_obj_t* cards[8];
 lv_obj_t* weather_icon;
 lv_obj_t* wifi_icon;
+lv_obj_t* bulb_icons[3]; // WC, UT, KOP bulb icons
 
 const char* roomNames[8] = {"EXT", "TIME_WIFI", "WC", "UT", "KOP", "DS", "S", "B"};
 
@@ -73,6 +75,7 @@ static lv_style_t style_text_secondary;
 static void ext_event_cb(lv_event_t * e);
 static void graph_event_cb(lv_event_t * e);
 static void return_to_rooms(lv_timer_t* timer);
+void updateWiFiIcon();
 
 void createRoomCards();
 
@@ -178,6 +181,10 @@ void createRoomCards() {
     lv_label_set_text(EXT_label4, "000 lx");
     lv_obj_align(EXT_label4, LV_ALIGN_TOP_LEFT, 5, 45);
 
+    // Weather icon in EXT card
+    weather_icon = lv_img_create(cards[ROOM_EXT]);
+    lv_obj_align(weather_icon, LV_ALIGN_BOTTOM_RIGHT, -5, -5);
+
     // TIME_WIFI
     cards[ROOM_TIME_WIFI] = lv_btn_create(lv_scr_act());
     lv_obj_set_user_data(cards[ROOM_TIME_WIFI], (void*)ROOM_TIME_WIFI);
@@ -237,6 +244,11 @@ void createRoomCards() {
     lv_label_set_text(WC_label2, "0000 hPa");
     lv_obj_align(WC_label2, LV_ALIGN_TOP_LEFT, 5, 45);
 
+    // WC bulb icon (wcLight=3, index 2)
+    bulb_icons[2] = lv_img_create(cards[ROOM_WC]);
+    lv_obj_align(bulb_icons[2], LV_ALIGN_TOP_RIGHT, -10, 10);
+    lv_obj_add_flag(bulb_icons[2], LV_OBJ_FLAG_HIDDEN); // Default hidden
+
     // UT
     cards[ROOM_UT] = lv_btn_create(lv_scr_act());
     lv_obj_set_user_data(cards[ROOM_UT], (void*)ROOM_UT);
@@ -264,6 +276,11 @@ void createRoomCards() {
     lv_label_set_text(UT_label3, "00.0%");
     lv_obj_align(UT_label3, LV_ALIGN_TOP_LEFT, 5, 45);
 
+    // UT bulb icon (utilityLight=1, index 0)
+    bulb_icons[0] = lv_img_create(cards[ROOM_UT]);
+    lv_obj_align(bulb_icons[0], LV_ALIGN_TOP_RIGHT, -10, 10);
+    lv_obj_add_flag(bulb_icons[0], LV_OBJ_FLAG_HIDDEN); // Default hidden
+
     // KOP
     cards[ROOM_KOP] = lv_btn_create(lv_scr_act());
     lv_obj_set_user_data(cards[ROOM_KOP], (void*)ROOM_KOP);
@@ -290,6 +307,11 @@ void createRoomCards() {
     lv_obj_add_flag(KOP_label3, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(KOP_label3, "00.0%");
     lv_obj_align(KOP_label3, LV_ALIGN_TOP_LEFT, 5, 45);
+
+    // KOP bulb icon (bathroomLight=2, index 1)
+    bulb_icons[1] = lv_img_create(cards[ROOM_KOP]);
+    lv_obj_align(bulb_icons[1], LV_ALIGN_TOP_RIGHT, -10, 10);
+    lv_obj_add_flag(bulb_icons[1], LV_OBJ_FLAG_HIDDEN); // Default hidden
 
     // DS
     cards[ROOM_DS] = lv_btn_create(lv_scr_act());
@@ -438,6 +460,7 @@ static void button_event_cb(lv_event_t * e) {
 void updateUI() {
     updateCards();
     updateWeatherIcon();
+    updateWiFiIcon();
 }
 
 void updateCards() {
@@ -505,6 +528,33 @@ void updateCards() {
     lv_label_set_text_fmt(DS_label4, "%d ppm", (int)sensorData.localCO2);
     lv_label_set_text(DS_label5, "---");
 
+    // Update light bulb icons (only if SD is available)
+    if (!(sensorData.errorFlags[0] & ERR_SD)) {
+        // UT bulb icon (utilityLight=1, inputs[1])
+        if (sensorData.inputs[1] == 1 && bulb_icons[0]) {
+            lv_img_set_src(bulb_icons[0], "S:/ico/32/bulb-32.png");
+            lv_obj_clear_flag(bulb_icons[0], LV_OBJ_FLAG_HIDDEN);
+        } else if (bulb_icons[0]) {
+            lv_obj_add_flag(bulb_icons[0], LV_OBJ_FLAG_HIDDEN);
+        }
+
+        // KOP bulb icon (bathroomLight=2, inputs[2])
+        if (sensorData.inputs[2] == 1 && bulb_icons[1]) {
+            lv_img_set_src(bulb_icons[1], "S:/ico/32/bulb-32.png");
+            lv_obj_clear_flag(bulb_icons[1], LV_OBJ_FLAG_HIDDEN);
+        } else if (bulb_icons[1]) {
+            lv_obj_add_flag(bulb_icons[1], LV_OBJ_FLAG_HIDDEN);
+        }
+
+        // WC bulb icon (wcLight=3, inputs[3])
+        if (sensorData.inputs[3] == 1 && bulb_icons[2]) {
+            lv_img_set_src(bulb_icons[2], "S:/ico/32/bulb-32.png");
+            lv_obj_clear_flag(bulb_icons[2], LV_OBJ_FLAG_HIDDEN);
+        } else if (bulb_icons[2]) {
+            lv_obj_add_flag(bulb_icons[2], LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+
     // Update window buttons colors - placeholder
 }
 
@@ -513,10 +563,83 @@ void cycleGraph() {
     // Update lv_chart series
 }
 
+String getWeatherIconFilename(int weatherCode, float lux) {
+    bool isDay = (lux > 20.0f);
+    String iconPath = "S:/ico/48/";
+
+    switch (weatherCode) {
+        case 0:  // Jasno nebo
+            return iconPath + (isDay ? "sun-48.png" : "night-moon-48.png");
+        case 1:  // Večinoma jasno
+            return iconPath + (isDay ? "haze-48.png" : "night-moon-48.png");
+        case 2:  // Delno oblačno
+            return iconPath + (isDay ? "partly-cloudy-day-48.png" : "cloudy-night-48.png");
+        case 3:  // Popolnoma oblačno
+            return iconPath + "cloudy-night-48.png";
+        case 45: // Megla
+            return iconPath + "fog-48.png";
+        case 48: // Megla z nabiranjem ivja
+            return iconPath + (isDay ? "haze-48.png" : "fog-48.png");
+        case 51: // Rosenje: Šibka intenzivnost
+        case 53: // Rosenje: Zmerna intenzivnost
+            return iconPath + "Drizzle-cloud-48.png";
+        case 55: // Rosenje: Gosta intenzivnost
+            return iconPath + "drizzle-wet-48.png";
+        case 56: // Zmrzovalno rosenje: Šibka intenzivnost
+        case 66: // Zmrzovalni dež: Šibka intenzivnost
+            return iconPath + "light-snow-48.png";
+        case 57: // Zmrzovalno rosenje: Gosta intenzivnost
+        case 67: // Zmrzovalni dež: Močna intenzivnost
+            return iconPath + "snow-48.png";
+        case 61: // Dež: Šibka intenzivnost
+        case 80: // Plohe dežja: Šibke
+            return iconPath + (isDay ? "partly-cloudy-day-48.png" : "Drizzle-cloud-48.png");
+        case 63: // Dež: Zmerna intenzivnost
+        case 81: // Plohe dežja: Zmerne
+            return iconPath + (isDay ? "rain-48.png" : "rain-48.png");
+        case 65: // Dež: Močna intenzivnost
+        case 82: // Plohe dežja: Silovite
+            return iconPath + (isDay ? "heavy-rain-48.png" : "heavy-rain-48.png");
+        case 71: // Sneženje: Šibka intenzivnost
+        case 73: // Sneženje: Zmerna intenzivnost
+        case 77: // Snežne zrnca
+        case 85: // Plohe snega: Šibke
+        case 86: // Plohe snega: Močne
+            return iconPath + (isDay ? "light-snow-48.png" : "light-snow-48.png");
+        case 75: // Sneženje: Močna intenzivnost
+            return iconPath + (isDay ? "snow-storm-48.png" : "snow-storm-48.png");
+        case 95: // Nevihta: Šibka ali zmerna
+        case 96: // Nevihta s šibko točo
+            return iconPath + (isDay ? "light-storm-48.png" : "light-storm-48.png");
+        case 99: // Nevihta z močno točo
+            return iconPath + (isDay ? "heavy-storm-48.png" : "heavy-storm-48.png");
+        default: // Fallback za neznane kode
+            return iconPath + (isDay ? "partly-cloudy-day-48.png" : "cloudy-night-48.png");
+    }
+}
+
 void updateWeatherIcon() {
-    // Update weather icon in EXT based on sensorData.weatherIcon
-    if (weather_icon) {
-        lv_img_set_src(weather_icon, ("S:/icons/" + sensorData.weatherIcon).c_str());
+    // Update weather icon in EXT based on sensorData.weatherCode and extLux
+    if (weather_icon && sensorData.weatherCode >= 0) {
+        String iconPath = getWeatherIconFilename(sensorData.weatherCode, sensorData.extLux);
+        lv_img_set_src(weather_icon, iconPath.c_str());
+        Serial.printf("[Weather] Code: %d, Lux: %.1f, Icon: %s\n",
+                     sensorData.weatherCode, sensorData.extLux, iconPath.c_str());
+    }
+}
+
+void updateWiFiIcon() {
+    // Update WiFi icon in TIME_WIFI based on WiFi status
+    if (wifi_icon) {
+        String iconPath = "S:/ico/32/";
+        if (WiFi.status() == WL_CONNECTED && !(sensorData.errorFlags[0] & ERR_WIFI)) {
+            iconPath += "wifi_on.png";
+        } else {
+            iconPath += "wifi_off.png";
+        }
+        lv_img_set_src(wifi_icon, iconPath.c_str());
+        Serial.printf("[WiFi] Status: %d, ErrorFlags: %d, Icon: %s\n",
+                     WiFi.status(), sensorData.errorFlags[0], iconPath.c_str());
     }
 }
 
