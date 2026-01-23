@@ -17,7 +17,6 @@ extern uint32_t lastArchive;
 extern uint32_t lastSensorReset;
 extern unsigned long lastSEWReceive;
 extern unsigned long lastStatusUpdate;
-extern bool is_pressed;
 extern bool webServerRunning;
 extern bool timeSynced;
 extern String wifiSSID;
