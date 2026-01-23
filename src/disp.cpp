@@ -157,6 +157,7 @@ void createRoomCards() {
     lv_obj_add_style(cards[ROOM_EXT], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_EXT], lv_color_hex(BTN_EXT_COLOR), 0);
 
+
     lv_obj_add_event_cb(cards[ROOM_EXT], button_event_cb, LV_EVENT_ALL, reinterpret_cast<void*>(ROOM_EXT));
     lv_obj_add_event_cb(cards[ROOM_EXT], ext_event_cb, LV_EVENT_CLICKED, NULL);
 
@@ -196,6 +197,7 @@ void createRoomCards() {
     lv_obj_set_size(cards[ROOM_TIME_WIFI], 137, 80);
     lv_obj_add_style(cards[ROOM_TIME_WIFI], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_TIME_WIFI], lv_color_hex(BTN_TIME_WIFI_COLOR), 0);
+
     lv_obj_add_event_cb(cards[ROOM_TIME_WIFI], button_event_cb, LV_EVENT_ALL, reinterpret_cast<void*>(ROOM_TIME_WIFI));
 
     // TIME_WIFI labels
@@ -234,6 +236,7 @@ void createRoomCards() {
     lv_obj_set_size(cards[ROOM_WC], 101, 80);
     lv_obj_add_style(cards[ROOM_WC], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_WC], lv_color_hex(BTN_WC_COLOR), 0);
+
     lv_obj_add_event_cb(cards[ROOM_WC], button_event_cb, LV_EVENT_ALL, reinterpret_cast<void*>(ROOM_WC));
 
     WC_label1 = lv_label_create(cards[ROOM_WC]);
@@ -260,6 +263,7 @@ void createRoomCards() {
     lv_obj_set_size(cards[ROOM_UT], 101, 80);
     lv_obj_add_style(cards[ROOM_UT], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_UT], lv_color_hex(BTN_UT_COLOR), 0);
+
     lv_obj_add_event_cb(cards[ROOM_UT], button_event_cb, LV_EVENT_ALL, reinterpret_cast<void*>(ROOM_UT));
 
     UT_label1 = lv_label_create(cards[ROOM_UT]);
@@ -292,6 +296,7 @@ void createRoomCards() {
     lv_obj_set_size(cards[ROOM_KOP], 101, 80);
     lv_obj_add_style(cards[ROOM_KOP], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_KOP], lv_color_hex(BTN_KOP_COLOR), 0);
+
     lv_obj_add_event_cb(cards[ROOM_KOP], button_event_cb, LV_EVENT_ALL, reinterpret_cast<void*>(ROOM_KOP));
 
     KOP_label1 = lv_label_create(cards[ROOM_KOP]);
@@ -324,6 +329,7 @@ void createRoomCards() {
     lv_obj_set_size(cards[ROOM_DS], 252, 67);
     lv_obj_add_style(cards[ROOM_DS], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_DS], lv_color_hex(BTN_DS_COLOR), 0);
+
     lv_obj_add_event_cb(cards[ROOM_DS], button_event_cb, LV_EVENT_ALL, reinterpret_cast<void*>(ROOM_DS));
 
     DS_label1 = lv_label_create(cards[ROOM_DS]);
@@ -363,6 +369,7 @@ void createRoomCards() {
     lv_obj_set_size(cards[ROOM_S], 28, 67);
     lv_obj_add_style(cards[ROOM_S], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_S], lv_color_hex(BTN_CLOSED_COLOR), 0);
+
     lv_obj_add_event_cb(cards[ROOM_S], button_event_cb, LV_EVENT_ALL, reinterpret_cast<void*>(ROOM_S));
 
     S_label1 = lv_label_create(cards[ROOM_S]);
@@ -378,6 +385,7 @@ void createRoomCards() {
     lv_obj_set_size(cards[ROOM_B], 28, 67);
     lv_obj_add_style(cards[ROOM_B], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_B], lv_color_hex(BTN_CLOSED_COLOR), 0);
+
     lv_obj_add_event_cb(cards[ROOM_B], button_event_cb, LV_EVENT_ALL, reinterpret_cast<void*>(ROOM_B));
 
     B_label1 = lv_label_create(cards[ROOM_B]);
@@ -417,29 +425,33 @@ static void button_event_cb(lv_event_t * e) {
     int roomId = reinterpret_cast<intptr_t>(lv_event_get_user_data(e));
 
     if (code == LV_EVENT_PRESSED) {
-        lv_anim_del(btn, anim_zoom_cb);
+        lv_anim_del(btn, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_t a;
         lv_anim_init(&a);
         lv_anim_set_var(&a, btn);
         lv_anim_set_values(&a, 256, 240);
         lv_anim_set_time(&a, 150);
-        lv_anim_set_exec_cb(&a, anim_zoom_cb);
+        lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
+        Serial.printf("[Anim] Start pressed zoom\n");
         lv_anim_start(&a);
     } else if (code == LV_EVENT_SHORT_CLICKED) {
-        Serial.printf("gumb [%s] kratek pritisk\n", roomNames[roomId]);
+        Serial.printf("[%lu] gumb [%s] kratek pritisk\n", millis(), roomNames[roomId]);
         // Perform short action (e.g., turn on fan)
+        // TODO: send MANUAL_CONTROL POST to CEW with roomId=0
+        lv_anim_del(btn, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_t a;
         lv_anim_init(&a);
         lv_anim_set_var(&a, btn);
         lv_anim_set_values(&a, 240, 256);
         lv_anim_set_time(&a, 150);
-        lv_anim_set_exec_cb(&a, anim_zoom_cb);
+        lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
         lv_anim_start(&a);
     } else if (code == LV_EVENT_LONG_PRESSED) {
-        Serial.printf("gumb [%s] dolg pritisk\n", roomNames[roomId]);
+        Serial.printf("[%lu] gumb [%s] dolg pritisk\n", millis(), roomNames[roomId]);
         // Perform long action (e.g., disable fan)
+        // TODO: send MANUAL_CONTROL POST to CEW with roomId=1
     }
 }
 
