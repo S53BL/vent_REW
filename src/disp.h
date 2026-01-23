@@ -8,6 +8,8 @@
 // Room ID enum
 enum RoomId { ROOM_EXT = 0, ROOM_TIME_WIFI, ROOM_WC, ROOM_UT, ROOM_KOP, ROOM_DS, ROOM_S, ROOM_B };
 
+#define LONG_PRESS_TIME 500
+
 // LVGL objects
 extern lv_obj_t* tabview;
 extern lv_obj_t* tab_rooms;
