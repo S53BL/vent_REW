@@ -10,7 +10,7 @@ extern lv_obj_t* tabview;
 extern lv_obj_t* tab_rooms;
 extern lv_obj_t* tab_graphs;
 extern lv_obj_t* chart;
-extern lv_obj_t* cards[6];
+extern lv_obj_t* cards[8];
 extern lv_obj_t* weather_icon;
 
 // Function declarations

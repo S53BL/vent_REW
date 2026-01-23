@@ -21,10 +21,9 @@ const lv_img_dsc_t red_wifi = {
 };
 
 // LVGL objects definitions
-lv_obj_t* room_container;
 lv_obj_t* graph_container;
 lv_obj_t* chart;
-lv_obj_t* cards[6];
+lv_obj_t* cards[8];
 lv_obj_t* weather_icon;
 lv_obj_t* wifi_icon;
 
@@ -119,20 +118,13 @@ bool initDisplay() {
 
     // Create UI containers
     Serial.println("  Creating UI containers...");
-    room_container = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(room_container, 320, 240);
-    lv_obj_set_pos(room_container, 0, 0);
-    lv_obj_set_style_bg_opa(room_container, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_clip_corner(room_container, false, 0);
-    lv_obj_clear_flag(room_container, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC);
-
     graph_container = lv_obj_create(lv_scr_act());
     lv_obj_set_size(graph_container, LV_PCT(100), LV_PCT(100));
     lv_obj_add_flag(graph_container, LV_OBJ_FLAG_HIDDEN);
 
     // Create room cards
     createRoomCards();
-    lv_obj_invalidate(room_container); // Force redraw
+    lv_obj_invalidate(lv_scr_act()); // Force redraw
     lv_refr_now(NULL); // Clear and refresh
 
     // Create graph content
@@ -151,47 +143,9 @@ bool initDisplay() {
 static void button_event_cb(lv_event_t * e);
 
 void createRoomCards() {
-    lv_obj_clear_flag(lv_scr_act(), LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC);
-
-    // Row containers
-    lv_obj_t* top_row = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(top_row, 318, 80);
-    lv_obj_set_pos(top_row, 1, 1);
-    lv_obj_set_style_bg_opa(top_row, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(top_row, 0, 0);
-    lv_obj_set_style_pad_all(top_row, 0, 0);
-    lv_obj_set_style_pad_left(top_row, 1, 0);
-    lv_obj_set_style_pad_right(top_row, 1, 0);
-    lv_obj_set_flex_flow(top_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(top_row, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(top_row, 4, 0);
-
-    lv_obj_t* middle_row = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(middle_row, 318, 80);
-    lv_obj_set_pos(middle_row, 1, 85);
-    lv_obj_set_style_bg_opa(middle_row, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(middle_row, 0, 0);
-    lv_obj_set_style_pad_all(middle_row, 0, 0);
-    lv_obj_set_style_pad_left(middle_row, 1, 0);
-    lv_obj_set_style_pad_right(middle_row, 1, 0);
-    lv_obj_set_flex_flow(middle_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(middle_row, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(middle_row, 4, 0);
-
-    lv_obj_t* bottom_row = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(bottom_row, 318, 67);
-    lv_obj_set_pos(bottom_row, 1, 169);
-    lv_obj_set_style_bg_opa(bottom_row, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(bottom_row, 0, 0);
-    lv_obj_set_style_pad_all(bottom_row, 0, 0);
-    lv_obj_set_style_pad_left(bottom_row, 1, 0);
-    lv_obj_set_style_pad_right(bottom_row, 1, 0);
-    lv_obj_set_flex_flow(bottom_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(bottom_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(bottom_row, 4, 0);
-
     // EXT
-    cards[ROOM_EXT] = lv_btn_create(top_row);
+    cards[ROOM_EXT] = lv_btn_create(lv_scr_act());
+    lv_obj_set_pos(cards[ROOM_EXT], 2, 1);
     lv_obj_set_size(cards[ROOM_EXT], 173, 80);
     lv_obj_add_style(cards[ROOM_EXT], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_EXT], lv_color_hex(BTN_EXT_COLOR), 0);
@@ -224,7 +178,8 @@ void createRoomCards() {
     lv_obj_align(EXT_label4, LV_ALIGN_TOP_LEFT, 5, 45);
 
     // TIME_WIFI
-    cards[ROOM_TIME_WIFI] = lv_btn_create(top_row);
+    cards[ROOM_TIME_WIFI] = lv_btn_create(lv_scr_act());
+    lv_obj_set_pos(cards[ROOM_TIME_WIFI], 181, 1);
     lv_obj_set_size(cards[ROOM_TIME_WIFI], 137, 80);
     lv_obj_add_style(cards[ROOM_TIME_WIFI], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_TIME_WIFI], lv_color_hex(BTN_TIME_WIFI_COLOR), 0);
@@ -260,7 +215,8 @@ void createRoomCards() {
     lv_obj_align(wifi_icon, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
 
     // WC
-    cards[ROOM_WC] = lv_btn_create(middle_row);
+    cards[ROOM_WC] = lv_btn_create(lv_scr_act());
+    lv_obj_set_pos(cards[ROOM_WC], 2, 85);
     lv_obj_set_size(cards[ROOM_WC], 101, 80);
     lv_obj_add_style(cards[ROOM_WC], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_WC], lv_color_hex(BTN_WC_COLOR), 0);
@@ -279,7 +235,8 @@ void createRoomCards() {
     lv_obj_align(WC_label2, LV_ALIGN_TOP_LEFT, 5, 45);
 
     // UT
-    cards[ROOM_UT] = lv_btn_create(middle_row);
+    cards[ROOM_UT] = lv_btn_create(lv_scr_act());
+    lv_obj_set_pos(cards[ROOM_UT], 109, 85);
     lv_obj_set_size(cards[ROOM_UT], 101, 80);
     lv_obj_add_style(cards[ROOM_UT], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_UT], lv_color_hex(BTN_UT_COLOR), 0);
@@ -304,7 +261,8 @@ void createRoomCards() {
     lv_obj_align(UT_label3, LV_ALIGN_TOP_LEFT, 5, 45);
 
     // KOP
-    cards[ROOM_KOP] = lv_btn_create(middle_row);
+    cards[ROOM_KOP] = lv_btn_create(lv_scr_act());
+    lv_obj_set_pos(cards[ROOM_KOP], 216, 85);
     lv_obj_set_size(cards[ROOM_KOP], 101, 80);
     lv_obj_add_style(cards[ROOM_KOP], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_KOP], lv_color_hex(BTN_KOP_COLOR), 0);
@@ -329,7 +287,8 @@ void createRoomCards() {
     lv_obj_align(KOP_label3, LV_ALIGN_TOP_LEFT, 5, 45);
 
     // DS
-    cards[ROOM_DS] = lv_btn_create(bottom_row);
+    cards[ROOM_DS] = lv_btn_create(lv_scr_act());
+    lv_obj_set_pos(cards[ROOM_DS], 2, 169);
     lv_obj_set_size(cards[ROOM_DS], 252, 67);
     lv_obj_add_style(cards[ROOM_DS], &style_card, 0);
     lv_obj_set_style_bg_color(cards[ROOM_DS], lv_color_hex(BTN_DS_COLOR), 0);
@@ -365,26 +324,29 @@ void createRoomCards() {
     lv_label_set_text(DS_label5, "000");
     lv_obj_align(DS_label5, LV_ALIGN_TOP_LEFT, 140, 30);
 
-    // Small buttons
-    lv_obj_t* skylight_btn = lv_btn_create(bottom_row);
-    lv_obj_set_size(skylight_btn, 28, 67);
-    lv_obj_add_style(skylight_btn, &style_card, 0);
-    lv_obj_set_style_bg_color(skylight_btn, lv_color_hex(BTN_CLOSED_COLOR), 0);
-    lv_obj_add_event_cb(skylight_btn, button_event_cb, LV_EVENT_ALL, (void*)6); // Placeholder
+    // S
+    cards[6] = lv_btn_create(lv_scr_act());
+    lv_obj_set_pos(cards[6], 258, 169);
+    lv_obj_set_size(cards[6], 28, 67);
+    lv_obj_add_style(cards[6], &style_card, 0);
+    lv_obj_set_style_bg_color(cards[6], lv_color_hex(BTN_CLOSED_COLOR), 0);
+    lv_obj_add_event_cb(cards[6], button_event_cb, LV_EVENT_ALL, (void*)6); // Placeholder
 
-    S_label1 = lv_label_create(skylight_btn);
+    S_label1 = lv_label_create(cards[6]);
     lv_obj_set_style_text_font(S_label1, FONT_24, 0);
     lv_obj_add_flag(S_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(S_label1, "S");
     lv_obj_align(S_label1, LV_ALIGN_CENTER, 0, 0);
 
-    lv_obj_t* balcony_btn = lv_btn_create(bottom_row);
-    lv_obj_set_size(balcony_btn, 28, 67);
-    lv_obj_add_style(balcony_btn, &style_card, 0);
-    lv_obj_set_style_bg_color(balcony_btn, lv_color_hex(BTN_CLOSED_COLOR), 0);
-    lv_obj_add_event_cb(balcony_btn, button_event_cb, LV_EVENT_ALL, (void*)7); // Placeholder
+    // B
+    cards[7] = lv_btn_create(lv_scr_act());
+    lv_obj_set_pos(cards[7], 290, 169);
+    lv_obj_set_size(cards[7], 28, 67);
+    lv_obj_add_style(cards[7], &style_card, 0);
+    lv_obj_set_style_bg_color(cards[7], lv_color_hex(BTN_CLOSED_COLOR), 0);
+    lv_obj_add_event_cb(cards[7], button_event_cb, LV_EVENT_ALL, (void*)7); // Placeholder
 
-    B_label1 = lv_label_create(balcony_btn);
+    B_label1 = lv_label_create(cards[7]);
     lv_obj_set_style_text_font(B_label1, FONT_24, 0);
     lv_obj_add_flag(B_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(B_label1, "B");
@@ -409,10 +371,10 @@ void createRoomCards() {
     Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_KOP], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_KOP]), lv_obj_get_height(cards[ROOM_KOP]));
     lv_obj_get_coords(cards[ROOM_DS], &coords);
     Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_DS], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_DS]), lv_obj_get_height(cards[ROOM_DS]));
-    lv_obj_get_coords(skylight_btn, &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[6], coords.x1, coords.y1, lv_obj_get_width(skylight_btn), lv_obj_get_height(skylight_btn));
-    lv_obj_get_coords(balcony_btn, &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[7], coords.x1, coords.y1, lv_obj_get_width(balcony_btn), lv_obj_get_height(balcony_btn));
+    lv_obj_get_coords(cards[6], &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[6], coords.x1, coords.y1, lv_obj_get_width(cards[6]), lv_obj_get_height(cards[6]));
+    lv_obj_get_coords(cards[7], &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[7], coords.x1, coords.y1, lv_obj_get_width(cards[7]), lv_obj_get_height(cards[7]));
 }
 
 static void button_event_cb(lv_event_t * e) {
@@ -543,7 +505,9 @@ void updateWeatherIcon() {
 }
 
 static void ext_event_cb(lv_event_t * e) {
-    lv_obj_add_flag(room_container, LV_OBJ_FLAG_HIDDEN);
+    for (int i = 0; i < 8; i++) {
+        lv_obj_add_flag(cards[i], LV_OBJ_FLAG_HIDDEN);
+    }
     lv_obj_clear_flag(graph_container, LV_OBJ_FLAG_HIDDEN);
     lv_timer_create(return_to_rooms, 30000, NULL);
 }
@@ -553,6 +517,8 @@ static void graph_event_cb(lv_event_t * e) {
 }
 
 static void return_to_rooms(lv_timer_t* timer) {
-    lv_obj_clear_flag(room_container, LV_OBJ_FLAG_HIDDEN);
+    for (int i = 0; i < 8; i++) {
+        lv_obj_clear_flag(cards[i], LV_OBJ_FLAG_HIDDEN);
+    }
     lv_obj_add_flag(graph_container, LV_OBJ_FLAG_HIDDEN);
 }
