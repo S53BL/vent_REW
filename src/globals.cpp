@@ -30,6 +30,11 @@ uint32_t lastHistorySave = 0;
 
 bool is_pressed = false;
 unsigned long touch_press_time = 0;
+unsigned long last_touch_time = 0;
+uint16_t last_touch_x = 0;
+uint16_t last_touch_y = 0;
+int pressed_count = 0;
+int released_count = 0;
 
 void initGlobals() {
     // Initialize sensorData with defaults
@@ -79,6 +84,11 @@ void initGlobals() {
 
     is_pressed = false;
     touch_press_time = 0;
+    last_touch_time = 0;
+    last_touch_x = 0;
+    last_touch_y = 0;
+    pressed_count = 0;
+    released_count = 0;
 
     Serial.println("Globals init OK");
 }

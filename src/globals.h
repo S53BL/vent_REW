@@ -35,5 +35,10 @@ extern uint32_t lastHistorySave;
 
 extern bool is_pressed;
 extern unsigned long touch_press_time;
+extern unsigned long last_touch_time;
+extern uint16_t last_touch_x;
+extern uint16_t last_touch_y;
+extern int pressed_count;
+extern int released_count;
 
 #endif // GLOBALS_H

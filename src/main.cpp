@@ -17,12 +17,9 @@
 TwoWire WireTouch = TwoWire(TOUCH_I2C_BUS);
 
 // Touch buffer
-uint16_t last_touch_x = 0;
-uint16_t last_touch_y = 0;
 uint16_t touch_strength = 0;
 uint8_t point_num = 0;
 uint8_t max_point_num = 1;
-unsigned long last_touch_time = 0;
 
 bool setupWiFi() {
     WiFi.config(localIP, gateway, subnet, dns);
@@ -151,7 +148,7 @@ void loop() {
     static uint32_t lastTouch = 0;
     if (now - lastTouch >= 50) {
         Touch_Read_Data();
-        if (millis() - last_touch_time >= 100) {
+        if (millis() - last_touch_time >= TOUCH_DEBOUNCE_MS) {
             Touch_Get_XY(&last_touch_x, &last_touch_y, &touch_strength, &point_num, max_point_num);
             if (point_num > 0) {
                 last_touch_time = millis();

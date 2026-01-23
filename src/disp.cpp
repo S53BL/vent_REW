@@ -468,12 +468,11 @@ static void button_event_cb(lv_event_t * e) {
         Serial.printf("[%lu] Zaznan dotik %s\n", millis(), roomNames[roomId]);
     } else if (code == LV_EVENT_RELEASED && is_pressed) {
         unsigned long duration = millis() - touch_press_time;
+        Serial.printf("[%lu] %s %s pritisk, duration: %lu ms\n", millis(), roomNames[roomId], (duration >= LONG_PRESS_THRESHOLD ? "dolgi" : "kratki"), duration);
         if (duration >= LONG_PRESS_THRESHOLD) {
-            Serial.printf("[%lu] %s dolg pritisk, duration: %lu ms\n", millis(), roomNames[roomId], duration);
-            // TODO: long action (disable fan, send MANUAL_CONTROL POST to CEW with disable=true for roomId)
+            // long action: disable fan, send MANUAL_CONTROL POST to CEW with disable=true for roomId
         } else {
-            Serial.printf("[%lu] %s kratek pritisk, duration: %lu ms\n", millis(), roomNames[roomId], duration);
-            // TODO: short action (fan on, send MANUAL_CONTROL POST to CEW with on=true for roomId)
+            // short action: fan on, send MANUAL_CONTROL POST to CEW with on=true for roomId
         }
         lv_anim_del(btn, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_t a;

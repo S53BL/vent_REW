@@ -6,6 +6,8 @@
 ******************************************************************************/
 #include "LVGL_Driver.h"
 #include "../../src/config.h"
+#include "../../src/globals.h"
+#include <ezTime.h>
 
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf1[ LVGL_BUF_LEN ];
@@ -48,28 +50,41 @@ void Lvgl_Touchpad_Read( lv_indev_drv_t * indev_drv, lv_indev_data_t * data )
   Touch_Read_Data();
   uint8_t touchpad_pressed = Touch_Get_XY(touchpad_x, touchpad_y, strength, &touchpad_cnt, CST328_LCD_TOUCH_MAX_POINTS);
   if (touchpad_pressed && touchpad_cnt > 0) {
+    // Swapped for 90 degree rotation with invert on y
+    data->point.x = map(TS_MAXY - touchpad_y[0], 0, TS_MAXY - TS_MINY, 0, 320);
+    data->point.y = map(touchpad_x[0], TS_MINX, TS_MAXX, 0, 240);
     if (millis() - lastTouchLog > 1000) {
       Serial.printf("Touch raw: x=%d y=%d\n", touchpad_x[0], touchpad_y[0]);
-      Serial.flush();
-      // Swapped for 90 degree rotation with invert on y
-      data->point.x = map(TS_MAXY - touchpad_y[0], 0, TS_MAXY - TS_MINY, 0, 320);
-      data->point.y = map(touchpad_x[0], TS_MINX, TS_MAXX, 0, 240);
       Serial.printf("Calibrated touch: x=%d y=%d\n", data->point.x, data->point.y);
       Serial.flush();
       lastTouchLog = millis();
-    } else {
-      // Swapped for 90 degree rotation with invert on y
-      data->point.x = map(TS_MAXY - touchpad_y[0], 0, TS_MAXY - TS_MINY, 0, 320);
-      data->point.y = map(touchpad_x[0], TS_MINX, TS_MAXX, 0, 240);
     }
-    // Bounds check
-    if (data->point.x < 0 || data->point.x > 320 || data->point.y < 0 || data->point.y > 240) {
-      data->state = LV_INDEV_STATE_RELEASED;
+  }
+
+  // Debounce filter for state transitions
+  if (touchpad_pressed && touchpad_cnt > 0) {
+    released_count = 0;
+    if (abs(data->point.x - last_touch_x) < 20 && abs(data->point.y - last_touch_y) < 20) { // filter position noise
+      pressed_count++;
+      if (pressed_count >= (TOUCH_DEBOUNCE_MS / 50)) { // prilagodi za loop delay ~50ms
+        data->state = LV_INDEV_STATE_PRESSED;
+        last_touch_x = data->point.x;
+        last_touch_y = data->point.y;
+      } else {
+        data->state = LV_INDEV_STATE_RELEASED;
+      }
     } else {
-      data->state = LV_INDEV_STATE_PR;
+      pressed_count = 0;
+      data->state = LV_INDEV_STATE_RELEASED;
     }
   } else {
-    data->state = LV_INDEV_STATE_REL;
+    pressed_count = 0;
+    released_count++;
+    if (released_count >= (TOUCH_DEBOUNCE_MS / 50)) {
+      data->state = LV_INDEV_STATE_RELEASED;
+    } else {
+      data->state = LV_INDEV_STATE_PRESSED;
+    }
   }
 }
 void example_increase_lvgl_tick(void *arg)
