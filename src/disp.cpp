@@ -424,7 +424,8 @@ static void button_event_cb(lv_event_t * e) {
     lv_obj_t * btn = lv_event_get_current_target(e);
     int roomId = reinterpret_cast<intptr_t>(lv_event_get_user_data(e));
 
-    if (code == LV_EVENT_PRESSED) {
+    if (code == LV_EVENT_PRESSED && !is_pressed) {
+        is_pressed = true;
         lv_anim_del(btn, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_t a;
         lv_anim_init(&a);
@@ -433,9 +434,12 @@ static void button_event_cb(lv_event_t * e) {
         lv_anim_set_time(&a, 150);
         lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
-        Serial.printf("[Anim] Start pressed zoom\n");
+        Serial.printf("[%lu] [Anim] Start pressed zoom\n", millis());
         lv_anim_start(&a);
-    } else if (code == LV_EVENT_SHORT_CLICKED) {
+    } else if (code == LV_EVENT_RELEASED) {
+        is_pressed = false;
+        // no action, just reset
+    } else if (code == LV_EVENT_SHORT_CLICKED && is_pressed) {
         Serial.printf("[%lu] gumb [%s] kratek pritisk\n", millis(), roomNames[roomId]);
         // Perform short action (e.g., turn on fan)
         // TODO: send MANUAL_CONTROL POST to CEW with roomId=0
@@ -448,10 +452,13 @@ static void button_event_cb(lv_event_t * e) {
         lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
         lv_anim_start(&a);
-    } else if (code == LV_EVENT_LONG_PRESSED) {
+        is_pressed = false;
+    } else if (code == LV_EVENT_LONG_PRESSED && is_pressed) {
         Serial.printf("[%lu] gumb [%s] dolg pritisk\n", millis(), roomNames[roomId]);
         // Perform long action (e.g., disable fan)
         // TODO: send MANUAL_CONTROL POST to CEW with roomId=1
+        is_pressed = false;
+        // no reverse animation for long press
     }
 }
 
