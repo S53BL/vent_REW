@@ -3,6 +3,7 @@
 #define CONFIG_H
 
 #include <Arduino.h>
+#include <lvgl.h>
 
 // Pin definitions (from Waveshare ESP32-S3-Touch-LCD-2.8 specs)
 #define EXAMPLE_PIN_NUM_MOSI            45
@@ -150,11 +151,13 @@ extern const char* ntpServers[];
 #define ICON_SIZE 32
 
 // Fonts (Montserrat sizes)
-#define FONT_MAIN &lv_font_montserrat_14
-#define FONT_LABEL &lv_font_montserrat_16
-#define FONT_COUNTDOWN &lv_font_montserrat_28
-#define FONT_DS_COUNTDOWN &lv_font_montserrat_20
-#define FONT_SMALL &lv_font_montserrat_12
+#define FONT_12 &lv_font_montserrat_12
+#define FONT_14 &lv_font_montserrat_14
+#define FONT_16 &lv_font_montserrat_16
+#define FONT_20 &lv_font_montserrat_20
+#define FONT_28 &lv_font_montserrat_28
+#define FONT_22 &lv_font_montserrat_22
+#define FONT_24 &lv_font_montserrat_24
 
 // Graph points
 #define GRAPH_POINTS 100

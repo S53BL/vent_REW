@@ -27,18 +27,43 @@ lv_obj_t* chart;
 lv_obj_t* cards[6];
 lv_obj_t* weather_icon;
 lv_obj_t* wifi_icon;
-lv_obj_t* wc_label;
-lv_obj_t* wc_value_label;
-lv_obj_t* ut_label;
-lv_obj_t* ut_temp_label;
-lv_obj_t* ut_hum_label;
-lv_obj_t* kop_label;
-lv_obj_t* kop_temp_label;
-lv_obj_t* kop_hum_label;
-lv_obj_t* ds_label1;
-lv_obj_t* ds_label2;
-lv_obj_t* ds_label3;
-lv_obj_t* time_wifi_label;
+
+// EXT labels
+lv_obj_t* EXT_label1;
+lv_obj_t* EXT_label2;
+lv_obj_t* EXT_label3;
+lv_obj_t* EXT_label4;
+
+// TIME_WIFI labels
+lv_obj_t* TIME_WIFI_label1;
+lv_obj_t* TIME_WIFI_label2;
+lv_obj_t* TIME_WIFI_label3;
+lv_obj_t* TIME_WIFI_label4;
+
+// WC labels
+lv_obj_t* WC_label1;
+lv_obj_t* WC_label2;
+
+// UT labels
+lv_obj_t* UT_label1;
+lv_obj_t* UT_label2;
+lv_obj_t* UT_label3;
+
+// KOP labels
+lv_obj_t* KOP_label1;
+lv_obj_t* KOP_label2;
+lv_obj_t* KOP_label3;
+
+// DS labels
+lv_obj_t* DS_label1;
+lv_obj_t* DS_label2;
+lv_obj_t* DS_label3;
+lv_obj_t* DS_label4;
+lv_obj_t* DS_label5;
+
+// S and B labels
+lv_obj_t* S_label1;
+lv_obj_t* B_label1;
 
 static lv_style_t style_card;
 static lv_style_t style_text_main;
@@ -172,25 +197,25 @@ void createRoomCards() {
     lv_obj_add_event_cb(cards[ROOM_EXT], ext_event_cb, LV_EVENT_CLICKED, NULL);
 
     // EXT labels
-    lv_obj_t* ext_label1 = lv_label_create(cards[ROOM_EXT]);
-    lv_obj_set_style_text_font(ext_label1, FONT_MAIN, 0);
-    lv_label_set_text(ext_label1, "23.6°");
-    lv_obj_align(ext_label1, LV_ALIGN_LEFT_MID, 10, 5);
+    EXT_label1 = lv_label_create(cards[ROOM_EXT]);
+    lv_obj_set_style_text_font(EXT_label1, FONT_14, 0);
+    lv_label_set_text(EXT_label1, "00.0°");
+    lv_obj_align(EXT_label1, LV_ALIGN_TOP_LEFT, 5, 0);
 
-    lv_obj_t* ext_label2 = lv_label_create(cards[ROOM_EXT]);
-    lv_obj_set_style_text_font(ext_label2, FONT_MAIN, 0);
-    lv_label_set_text(ext_label2, "77.3%");
-    lv_obj_align(ext_label2, LV_ALIGN_LEFT_MID, 10, 19);
+    EXT_label2 = lv_label_create(cards[ROOM_EXT]);
+    lv_obj_set_style_text_font(EXT_label2, FONT_14, 0);
+    lv_label_set_text(EXT_label2, "00.0%");
+    lv_obj_align(EXT_label2, LV_ALIGN_TOP_LEFT, 5, 15);
 
-    lv_obj_t* ext_label3 = lv_label_create(cards[ROOM_EXT]);
-    lv_obj_set_style_text_font(ext_label3, FONT_MAIN, 0);
-    lv_label_set_text(ext_label3, "1013 hPa");
-    lv_obj_align(ext_label3, LV_ALIGN_LEFT_MID, 10, 33);
+    EXT_label3 = lv_label_create(cards[ROOM_EXT]);
+    lv_obj_set_style_text_font(EXT_label3, FONT_14, 0);
+    lv_label_set_text(EXT_label3, "0000 hPa");
+    lv_obj_align(EXT_label3, LV_ALIGN_TOP_LEFT, 5, 30);
 
-    lv_obj_t* ext_label4 = lv_label_create(cards[ROOM_EXT]);
-    lv_obj_set_style_text_font(ext_label4, FONT_MAIN, 0);
-    lv_label_set_text(ext_label4, "300 lx");
-    lv_obj_align(ext_label4, LV_ALIGN_LEFT_MID, 10, 47);
+    EXT_label4 = lv_label_create(cards[ROOM_EXT]);
+    lv_obj_set_style_text_font(EXT_label4, FONT_14, 0);
+    lv_label_set_text(EXT_label4, "000 lx");
+    lv_obj_align(EXT_label4, LV_ALIGN_TOP_LEFT, 5, 45);
 
     // TIME_WIFI
     cards[ROOM_TIME_WIFI] = lv_btn_create(top_row);
@@ -200,25 +225,25 @@ void createRoomCards() {
     lv_obj_add_event_cb(cards[ROOM_TIME_WIFI], button_event_cb, LV_EVENT_ALL, (void*)ROOM_TIME_WIFI);
 
     // TIME_WIFI labels
-    lv_obj_t* time_label1 = lv_label_create(cards[ROOM_TIME_WIFI]);
-    lv_obj_set_style_text_font(time_label1, FONT_MAIN, 0);
-    lv_label_set_text(time_label1, "11:32");
-    lv_obj_align(time_label1, LV_ALIGN_LEFT_MID, 10, 5);
+    TIME_WIFI_label1 = lv_label_create(cards[ROOM_TIME_WIFI]);
+    lv_obj_set_style_text_font(TIME_WIFI_label1, FONT_14, 0);
+    lv_label_set_text(TIME_WIFI_label1, "00:00");
+    lv_obj_align(TIME_WIFI_label1, LV_ALIGN_TOP_LEFT, 5, 0);
 
-    lv_obj_t* time_label2 = lv_label_create(cards[ROOM_TIME_WIFI]);
-    lv_obj_set_style_text_font(time_label2, FONT_MAIN, 0);
-    lv_label_set_text(time_label2, "22.1.26");
-    lv_obj_align(time_label2, LV_ALIGN_LEFT_MID, 10, 19);
+    TIME_WIFI_label2 = lv_label_create(cards[ROOM_TIME_WIFI]);
+    lv_obj_set_style_text_font(TIME_WIFI_label2, FONT_14, 0);
+    lv_label_set_text(TIME_WIFI_label2, "00.00.00");
+    lv_obj_align(TIME_WIFI_label2, LV_ALIGN_TOP_LEFT, 5, 15);
 
-    lv_obj_t* time_label3 = lv_label_create(cards[ROOM_TIME_WIFI]);
-    lv_obj_set_style_text_font(time_label3, FONT_MAIN, 0);
-    lv_label_set_text(time_label3, "P=78 W");
-    lv_obj_align(time_label3, LV_ALIGN_LEFT_MID, 10, 33);
+    TIME_WIFI_label3 = lv_label_create(cards[ROOM_TIME_WIFI]);
+    lv_obj_set_style_text_font(TIME_WIFI_label3, FONT_14, 0);
+    lv_label_set_text(TIME_WIFI_label3, "P=000 W");
+    lv_obj_align(TIME_WIFI_label3, LV_ALIGN_TOP_LEFT, 5, 30);
 
-    lv_obj_t* time_label4 = lv_label_create(cards[ROOM_TIME_WIFI]);
-    lv_obj_set_style_text_font(time_label4, FONT_MAIN, 0);
-    lv_label_set_text(time_label4, "E=12450 Wh (OFF)");
-    lv_obj_align(time_label4, LV_ALIGN_LEFT_MID, 10, 47);
+    TIME_WIFI_label4 = lv_label_create(cards[ROOM_TIME_WIFI]);
+    lv_obj_set_style_text_font(TIME_WIFI_label4, FONT_14, 0);
+    lv_label_set_text(TIME_WIFI_label4, "E=0000 Wh");
+    lv_obj_align(TIME_WIFI_label4, LV_ALIGN_TOP_LEFT, 5, 45);
 
     // WiFi icon placeholder
     wifi_icon = lv_img_create(cards[ROOM_TIME_WIFI]);
@@ -231,15 +256,15 @@ void createRoomCards() {
     lv_obj_set_style_bg_color(cards[ROOM_WC], lv_color_hex(BTN_WC_COLOR), 0);
     lv_obj_add_event_cb(cards[ROOM_WC], button_event_cb, LV_EVENT_ALL, (void*)ROOM_WC);
 
-    wc_label = lv_label_create(cards[ROOM_WC]);
-    lv_obj_set_style_text_font(wc_label, FONT_LABEL, 0);
-    lv_label_set_text(wc_label, "WC");
-    lv_obj_align(wc_label, LV_ALIGN_LEFT_MID, 10, 3);
+    WC_label1 = lv_label_create(cards[ROOM_WC]);
+    lv_obj_set_style_text_font(WC_label1, FONT_24, 0);
+    lv_label_set_text(WC_label1, "WC");
+    lv_obj_align(WC_label1, LV_ALIGN_TOP_LEFT, 5, 0);
 
-    wc_value_label = lv_label_create(cards[ROOM_WC]);
-    lv_obj_set_style_text_font(wc_value_label, FONT_MAIN, 0);
-    lv_label_set_text(wc_value_label, "1013 hPa");
-    lv_obj_align(wc_value_label, LV_ALIGN_LEFT_MID, 10, 25);
+    WC_label2 = lv_label_create(cards[ROOM_WC]);
+    lv_obj_set_style_text_font(WC_label2, FONT_14, 0);
+    lv_label_set_text(WC_label2, "0000 hPa");
+    lv_obj_align(WC_label2, LV_ALIGN_TOP_LEFT, 5, 45);
 
     // UT
     cards[ROOM_UT] = lv_btn_create(middle_row);
@@ -248,20 +273,20 @@ void createRoomCards() {
     lv_obj_set_style_bg_color(cards[ROOM_UT], lv_color_hex(BTN_UT_COLOR), 0);
     lv_obj_add_event_cb(cards[ROOM_UT], button_event_cb, LV_EVENT_ALL, (void*)ROOM_UT);
 
-    ut_label = lv_label_create(cards[ROOM_UT]);
-    lv_obj_set_style_text_font(ut_label, FONT_LABEL, 0);
-    lv_label_set_text(ut_label, "UT");
-    lv_obj_align(ut_label, LV_ALIGN_LEFT_MID, 10, 3);
+    UT_label1 = lv_label_create(cards[ROOM_UT]);
+    lv_obj_set_style_text_font(UT_label1, FONT_24, 0);
+    lv_label_set_text(UT_label1, "UT");
+    lv_obj_align(UT_label1, LV_ALIGN_TOP_LEFT, 5, 0);
 
-    ut_temp_label = lv_label_create(cards[ROOM_UT]);
-    lv_obj_set_style_text_font(ut_temp_label, FONT_MAIN, 0);
-    lv_label_set_text(ut_temp_label, "22.1°");
-    lv_obj_align(ut_temp_label, LV_ALIGN_LEFT_MID, 10, 25);
+    UT_label2 = lv_label_create(cards[ROOM_UT]);
+    lv_obj_set_style_text_font(UT_label2, FONT_14, 0);
+    lv_label_set_text(UT_label2, "00.0°");
+    lv_obj_align(UT_label2, LV_ALIGN_TOP_LEFT, 5, 30);
 
-    ut_hum_label = lv_label_create(cards[ROOM_UT]);
-    lv_obj_set_style_text_font(ut_hum_label, FONT_MAIN, 0);
-    lv_label_set_text(ut_hum_label, "45.9%");
-    lv_obj_align(ut_hum_label, LV_ALIGN_LEFT_MID, 10, 39);
+    UT_label3 = lv_label_create(cards[ROOM_UT]);
+    lv_obj_set_style_text_font(UT_label3, FONT_14, 0);
+    lv_label_set_text(UT_label3, "00.0%");
+    lv_obj_align(UT_label3, LV_ALIGN_TOP_LEFT, 5, 45);
 
     // KOP
     cards[ROOM_KOP] = lv_btn_create(middle_row);
@@ -270,20 +295,20 @@ void createRoomCards() {
     lv_obj_set_style_bg_color(cards[ROOM_KOP], lv_color_hex(BTN_KOP_COLOR), 0);
     lv_obj_add_event_cb(cards[ROOM_KOP], button_event_cb, LV_EVENT_ALL, (void*)ROOM_KOP);
 
-    kop_label = lv_label_create(cards[ROOM_KOP]);
-    lv_obj_set_style_text_font(kop_label, FONT_LABEL, 0);
-    lv_label_set_text(kop_label, "KOP");
-    lv_obj_align(kop_label, LV_ALIGN_LEFT_MID, 10, 3);
+    KOP_label1 = lv_label_create(cards[ROOM_KOP]);
+    lv_obj_set_style_text_font(KOP_label1, FONT_24, 0);
+    lv_label_set_text(KOP_label1, "KOP");
+    lv_obj_align(KOP_label1, LV_ALIGN_TOP_LEFT, 5, 0);
 
-    kop_temp_label = lv_label_create(cards[ROOM_KOP]);
-    lv_obj_set_style_text_font(kop_temp_label, FONT_MAIN, 0);
-    lv_label_set_text(kop_temp_label, "24.2°");
-    lv_obj_align(kop_temp_label, LV_ALIGN_LEFT_MID, 10, 25);
+    KOP_label2 = lv_label_create(cards[ROOM_KOP]);
+    lv_obj_set_style_text_font(KOP_label2, FONT_14, 0);
+    lv_label_set_text(KOP_label2, "00.0°");
+    lv_obj_align(KOP_label2, LV_ALIGN_TOP_LEFT, 5, 30);
 
-    kop_hum_label = lv_label_create(cards[ROOM_KOP]);
-    lv_obj_set_style_text_font(kop_hum_label, FONT_MAIN, 0);
-    lv_label_set_text(kop_hum_label, "65.1%");
-    lv_obj_align(kop_hum_label, LV_ALIGN_LEFT_MID, 10, 39);
+    KOP_label3 = lv_label_create(cards[ROOM_KOP]);
+    lv_obj_set_style_text_font(KOP_label3, FONT_14, 0);
+    lv_label_set_text(KOP_label3, "00.0%");
+    lv_obj_align(KOP_label3, LV_ALIGN_TOP_LEFT, 5, 45);
 
     // DS
     cards[ROOM_DS] = lv_btn_create(bottom_row);
@@ -292,20 +317,30 @@ void createRoomCards() {
     lv_obj_set_style_bg_color(cards[ROOM_DS], lv_color_hex(BTN_DS_COLOR), 0);
     lv_obj_add_event_cb(cards[ROOM_DS], button_event_cb, LV_EVENT_ALL, (void*)ROOM_DS);
 
-    ds_label1 = lv_label_create(cards[ROOM_DS]);
-    lv_obj_set_style_text_font(ds_label1, FONT_LABEL, 0);
-    lv_label_set_text(ds_label1, "DS");
-    lv_obj_align(ds_label1, LV_ALIGN_LEFT_MID, 10, 3);
+    DS_label1 = lv_label_create(cards[ROOM_DS]);
+    lv_obj_set_style_text_font(DS_label1, FONT_24, 0);
+    lv_label_set_text(DS_label1, "DS");
+    lv_obj_align(DS_label1, LV_ALIGN_TOP_LEFT, 5, 10);
 
-    ds_label2 = lv_label_create(cards[ROOM_DS]);
-    lv_obj_set_style_text_font(ds_label2, FONT_MAIN, 0);
-    lv_label_set_text(ds_label2, "24.8° 52.1%");
-    lv_obj_align(ds_label2, LV_ALIGN_LEFT_MID, 10, 25);
+    DS_label2 = lv_label_create(cards[ROOM_DS]);
+    lv_obj_set_style_text_font(DS_label2, FONT_14, 0);
+    lv_label_set_text(DS_label2, "00.0°");
+    lv_obj_align(DS_label2, LV_ALIGN_TOP_LEFT, 75, 10);
 
-    ds_label3 = lv_label_create(cards[ROOM_DS]);
-    lv_obj_set_style_text_font(ds_label3, FONT_MAIN, 0);
-    lv_label_set_text(ds_label3, "845 ppm");
-    lv_obj_align(ds_label3, LV_ALIGN_LEFT_MID, 10, 39);
+    DS_label3 = lv_label_create(cards[ROOM_DS]);
+    lv_obj_set_style_text_font(DS_label3, FONT_14, 0);
+    lv_label_set_text(DS_label3, "00.0%");
+    lv_obj_align(DS_label3, LV_ALIGN_TOP_LEFT, 75, 30);
+
+    DS_label4 = lv_label_create(cards[ROOM_DS]);
+    lv_obj_set_style_text_font(DS_label4, FONT_14, 0);
+    lv_label_set_text(DS_label4, "000 ppm");
+    lv_obj_align(DS_label4, LV_ALIGN_TOP_LEFT, 140, 10);
+
+    DS_label5 = lv_label_create(cards[ROOM_DS]);
+    lv_obj_set_style_text_font(DS_label5, FONT_14, 0);
+    lv_label_set_text(DS_label5, "000");
+    lv_obj_align(DS_label5, LV_ALIGN_TOP_LEFT, 140, 30);
 
     // Small buttons
     lv_obj_t* skylight_btn = lv_btn_create(bottom_row);
@@ -314,10 +349,10 @@ void createRoomCards() {
     lv_obj_set_style_bg_color(skylight_btn, lv_color_hex(BTN_CLOSED_COLOR), 0);
     lv_obj_add_event_cb(skylight_btn, button_event_cb, LV_EVENT_ALL, (void*)6); // Placeholder
 
-    lv_obj_t* s_label = lv_label_create(skylight_btn);
-    lv_obj_set_style_text_font(s_label, FONT_SMALL, 0);
-    lv_label_set_text(s_label, "S");
-    lv_obj_align(s_label, LV_ALIGN_CENTER, 0, 33);
+    S_label1 = lv_label_create(skylight_btn);
+    lv_obj_set_style_text_font(S_label1, FONT_24, 0);
+    lv_label_set_text(S_label1, "S");
+    lv_obj_align(S_label1, LV_ALIGN_CENTER, 0, 0);
 
     lv_obj_t* balcony_btn = lv_btn_create(bottom_row);
     lv_obj_set_size(balcony_btn, 28, 67);
@@ -325,10 +360,10 @@ void createRoomCards() {
     lv_obj_set_style_bg_color(balcony_btn, lv_color_hex(BTN_CLOSED_COLOR), 0);
     lv_obj_add_event_cb(balcony_btn, button_event_cb, LV_EVENT_ALL, (void*)7); // Placeholder
 
-    lv_obj_t* b_label = lv_label_create(balcony_btn);
-    lv_obj_set_style_text_font(b_label, FONT_SMALL, 0);
-    lv_label_set_text(b_label, "B");
-    lv_obj_align(b_label, LV_ALIGN_CENTER, 0, 33);
+    B_label1 = lv_label_create(balcony_btn);
+    lv_obj_set_style_text_font(B_label1, FONT_24, 0);
+    lv_label_set_text(B_label1, "B");
+    lv_obj_align(B_label1, LV_ALIGN_CENTER, 0, 0);
 
     lv_obj_invalidate(lv_scr_act());
     lv_refr_now(NULL);
@@ -379,53 +414,69 @@ void updateUI() {
 }
 
 void updateCards() {
-    // Update EXT - placeholder, in real update from sensorData
-    // Labels already set to placeholder
+    // Update EXT
+    lv_label_set_text_fmt(EXT_label1, "%.1f°", sensorData.extTemp);
+    lv_label_set_text_fmt(EXT_label2, "%.1f%%", sensorData.extHumidity);
+    lv_label_set_text_fmt(EXT_label3, "%d hPa", (int)sensorData.extPressure);
+    lv_label_set_text_fmt(EXT_label4, "%d lx", (int)sensorData.extLux);
 
-    // Update TIME_WIFI - placeholder, in real update from NTP and sensorData
-    // Labels already set to placeholder
-    // TODO: Add (OFF) if CE offline
+    // Update TIME_WIFI
+    if (timeSynced) {
+        lv_label_set_text(TIME_WIFI_label1, myTZ.dateTime("H:i").c_str());
+        lv_label_set_text(TIME_WIFI_label2, myTZ.dateTime("d.m.Y").c_str());
+    } else {
+        lv_label_set_text(TIME_WIFI_label1, "--");
+        lv_label_set_text(TIME_WIFI_label2, "--");
+    }
+    lv_label_set_text_fmt(TIME_WIFI_label3, "P=%.1f W", sensorData.currentPower);
+    lv_label_set_text_fmt(TIME_WIFI_label4, "E=%.1f Wh", sensorData.energyConsumption);
 
     // Update WC
-    if (sensorData.bathroomFan) {
-        uint32_t remaining = sensorData.offTimes[0] - millis();
+    if (sensorData.fanStates[0]) {
+        uint32_t remaining = sensorData.offTimes[0] - myTZ.now();
         if (remaining > 0) {
-            lv_label_set_text_fmt(wc_label, "%d", remaining / 1000);
-            lv_obj_align(wc_label, LV_ALIGN_CENTER, 0, 0);
+            lv_label_set_text_fmt(WC_label1, "%d", remaining);
         } else {
-            lv_label_set_text(wc_label, "OFF");
-            lv_obj_align(wc_label, LV_ALIGN_LEFT_MID, 10, 0);
+            lv_label_set_text(WC_label1, "WC");
         }
     } else {
-        lv_label_set_text(wc_label, "1013 hPa");
-        lv_obj_align(wc_label, LV_ALIGN_LEFT_MID, 10, 0);
+        lv_label_set_text(WC_label1, "WC");
     }
+    lv_label_set_text_fmt(WC_label2, "%d hPa", (int)sensorData.bathroomPressure);
 
     // Update UT
-    lv_label_set_text_fmt(ut_label, "22.1°\n45.9%%");
-    lv_obj_align(ut_label, LV_ALIGN_LEFT_MID, 10, 0);
-
-    // Update KOP
-    lv_label_set_text_fmt(kop_label, "24.2°\n65.1%%");
-    lv_obj_align(kop_label, LV_ALIGN_LEFT_MID, 10, 0);
-
-    // Update DS
-    if (sensorData.dsFan) {
-        uint32_t remaining = sensorData.offTimes[2] - millis();
+    if (sensorData.fanStates[1]) {
+        uint32_t remaining = sensorData.offTimes[1] - myTZ.now();
         if (remaining > 0) {
-            lv_label_set_text_fmt(ds_label3, "%d", remaining / 1000);
-            lv_obj_align(ds_label3, LV_ALIGN_CENTER, 0, 0);
-            lv_label_set_text(ds_label2, "");
+            lv_label_set_text_fmt(UT_label1, "%d", remaining);
         } else {
-            lv_label_set_text(ds_label3, "OFF");
-            lv_obj_align(ds_label3, LV_ALIGN_LEFT_MID, 10, 0);
-            lv_label_set_text(ds_label2, "24.8° 52.1%");
+            lv_label_set_text(UT_label1, "UT");
         }
     } else {
-        lv_label_set_text(ds_label2, "24.8° 52.1%");
-        lv_label_set_text(ds_label3, "845 ppm");
-        lv_obj_align(ds_label3, LV_ALIGN_LEFT_MID, 10, 0);
+        lv_label_set_text(UT_label1, "UT");
     }
+    lv_label_set_text_fmt(UT_label2, "%.1f°", sensorData.utTemp);
+    lv_label_set_text_fmt(UT_label3, "%.1f%%", sensorData.utHumidity);
+
+    // Update KOP
+    if (sensorData.fanStates[2]) {
+        uint32_t remaining = sensorData.offTimes[2] - myTZ.now();
+        if (remaining > 0) {
+            lv_label_set_text_fmt(KOP_label1, "%d", remaining);
+        } else {
+            lv_label_set_text(KOP_label1, "KOP");
+        }
+    } else {
+        lv_label_set_text(KOP_label1, "KOP");
+    }
+    lv_label_set_text_fmt(KOP_label2, "%.1f°", sensorData.bathroomTemp);
+    lv_label_set_text_fmt(KOP_label3, "%.1f%%", sensorData.bathroomHumidity);
+
+    // Update DS
+    lv_label_set_text_fmt(DS_label2, "%.1f°", sensorData.localTemp);
+    lv_label_set_text_fmt(DS_label3, "%.1f%%", sensorData.localHumidity);
+    lv_label_set_text_fmt(DS_label4, "%d ppm", (int)sensorData.localCO2);
+    lv_label_set_text(DS_label5, "---");
 
     // Update window buttons colors - placeholder
 }
