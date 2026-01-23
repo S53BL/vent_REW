@@ -150,11 +150,12 @@ void loop() {
     // Touch buffer update every 50ms
     static uint32_t lastTouch = 0;
     if (now - lastTouch >= 50) {
-        if (millis() - last_touch_time < 100) return;
         Touch_Read_Data();
-        Touch_Get_XY(&last_touch_x, &last_touch_y, &touch_strength, &point_num, max_point_num);
-        if (point_num > 0) {
-            last_touch_time = millis();
+        if (millis() - last_touch_time >= 100) {
+            Touch_Get_XY(&last_touch_x, &last_touch_y, &touch_strength, &point_num, max_point_num);
+            if (point_num > 0) {
+                last_touch_time = millis();
+            }
         }
         lastTouch = now;
     }

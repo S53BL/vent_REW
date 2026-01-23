@@ -33,4 +33,7 @@ extern String lastDate;
 extern String logBuffer;
 extern uint32_t lastHistorySave;
 
+extern bool is_pressed;
+extern unsigned long touch_press_time;
+
 #endif // GLOBALS_H

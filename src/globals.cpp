@@ -28,6 +28,9 @@ String lastDate = "";
 String logBuffer = "";
 uint32_t lastHistorySave = 0;
 
+bool is_pressed = false;
+unsigned long touch_press_time = 0;
+
 void initGlobals() {
     // Initialize sensorData with defaults
     sensorData.localTemp = 0.0;
@@ -73,6 +76,9 @@ void initGlobals() {
     settings.tempMinThreshold = 18;
     settings.dndAllowAutomatic = true;
     memset(settings.nndDays, 0, sizeof(settings.nndDays));
+
+    is_pressed = false;
+    touch_press_time = 0;
 
     Serial.println("Globals init OK");
 }

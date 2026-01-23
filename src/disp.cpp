@@ -453,15 +453,40 @@ static void button_event_cb(lv_event_t * e) {
     lv_obj_t * btn = lv_event_get_current_target(e);
     int roomId = reinterpret_cast<intptr_t>(lv_event_get_user_data(e));
 
-    if (code == LV_EVENT_SHORT_CLICKED) {
-        Serial.printf("[%lu] gumb [%s] kratek pritisk\n", millis(), roomNames[roomId]);
-        // Perform short action (e.g., turn on fan)
-        // TODO: send MANUAL_CONTROL POST to CEW with roomId=0
-    } else if (code == LV_EVENT_LONG_PRESSED) {
-        Serial.printf("[%lu] gumb [%s] dolg pritisk\n", millis(), roomNames[roomId]);
-        // Perform long action (e.g., disable fan)
-        // TODO: send MANUAL_CONTROL POST to CEW with roomId=1
+    if (code == LV_EVENT_PRESSED && !is_pressed) {
+        is_pressed = true;
+        touch_press_time = millis();
+        lv_anim_del(btn, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
+        lv_anim_t a;
+        lv_anim_init(&a);
+        lv_anim_set_var(&a, btn);
+        lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
+        lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
+        lv_anim_set_time(&a, 150);
+        lv_anim_set_values(&a, 256, 240);
+        lv_anim_start(&a);
+        Serial.printf("[%lu] Zaznan dotik %s\n", millis(), roomNames[roomId]);
+    } else if (code == LV_EVENT_RELEASED && is_pressed) {
+        unsigned long duration = millis() - touch_press_time;
+        if (duration >= LONG_PRESS_THRESHOLD) {
+            Serial.printf("[%lu] %s dolg pritisk, duration: %lu ms\n", millis(), roomNames[roomId], duration);
+            // TODO: long action (disable fan, send MANUAL_CONTROL POST to CEW with disable=true for roomId)
+        } else {
+            Serial.printf("[%lu] %s kratek pritisk, duration: %lu ms\n", millis(), roomNames[roomId], duration);
+            // TODO: short action (fan on, send MANUAL_CONTROL POST to CEW with on=true for roomId)
+        }
+        lv_anim_del(btn, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
+        lv_anim_t a;
+        lv_anim_init(&a);
+        lv_anim_set_var(&a, btn);
+        lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
+        lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
+        lv_anim_set_time(&a, 150);
+        lv_anim_set_values(&a, 240, 256);
+        lv_anim_start(&a);
+        is_pressed = false;
     }
+    // Ignore other codes
 }
 
 
