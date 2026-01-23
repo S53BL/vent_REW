@@ -201,21 +201,25 @@ void createRoomCards() {
     // EXT labels
     EXT_label1 = lv_label_create(cards[ROOM_EXT]);
     lv_obj_set_style_text_font(EXT_label1, FONT_14, 0);
+    lv_obj_add_flag(EXT_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(EXT_label1, "00.0°");
     lv_obj_align(EXT_label1, LV_ALIGN_TOP_LEFT, 5, 0);
 
     EXT_label2 = lv_label_create(cards[ROOM_EXT]);
     lv_obj_set_style_text_font(EXT_label2, FONT_14, 0);
+    lv_obj_add_flag(EXT_label2, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(EXT_label2, "00.0%");
     lv_obj_align(EXT_label2, LV_ALIGN_TOP_LEFT, 5, 15);
 
     EXT_label3 = lv_label_create(cards[ROOM_EXT]);
     lv_obj_set_style_text_font(EXT_label3, FONT_14, 0);
+    lv_obj_add_flag(EXT_label3, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(EXT_label3, "0000 hPa");
     lv_obj_align(EXT_label3, LV_ALIGN_TOP_LEFT, 5, 30);
 
     EXT_label4 = lv_label_create(cards[ROOM_EXT]);
     lv_obj_set_style_text_font(EXT_label4, FONT_14, 0);
+    lv_obj_add_flag(EXT_label4, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(EXT_label4, "000 lx");
     lv_obj_align(EXT_label4, LV_ALIGN_TOP_LEFT, 5, 45);
 
@@ -229,21 +233,25 @@ void createRoomCards() {
     // TIME_WIFI labels
     TIME_WIFI_label1 = lv_label_create(cards[ROOM_TIME_WIFI]);
     lv_obj_set_style_text_font(TIME_WIFI_label1, FONT_14, 0);
+    lv_obj_add_flag(TIME_WIFI_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(TIME_WIFI_label1, "00:00");
     lv_obj_align(TIME_WIFI_label1, LV_ALIGN_TOP_LEFT, 5, 0);
 
     TIME_WIFI_label2 = lv_label_create(cards[ROOM_TIME_WIFI]);
     lv_obj_set_style_text_font(TIME_WIFI_label2, FONT_14, 0);
+    lv_obj_add_flag(TIME_WIFI_label2, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(TIME_WIFI_label2, "00.00.00");
     lv_obj_align(TIME_WIFI_label2, LV_ALIGN_TOP_LEFT, 5, 15);
 
     TIME_WIFI_label3 = lv_label_create(cards[ROOM_TIME_WIFI]);
     lv_obj_set_style_text_font(TIME_WIFI_label3, FONT_14, 0);
+    lv_obj_add_flag(TIME_WIFI_label3, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(TIME_WIFI_label3, "P=000 W");
     lv_obj_align(TIME_WIFI_label3, LV_ALIGN_TOP_LEFT, 5, 30);
 
     TIME_WIFI_label4 = lv_label_create(cards[ROOM_TIME_WIFI]);
     lv_obj_set_style_text_font(TIME_WIFI_label4, FONT_14, 0);
+    lv_obj_add_flag(TIME_WIFI_label4, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(TIME_WIFI_label4, "E=0000 Wh");
     lv_obj_align(TIME_WIFI_label4, LV_ALIGN_TOP_LEFT, 5, 45);
 
@@ -260,11 +268,13 @@ void createRoomCards() {
 
     WC_label1 = lv_label_create(cards[ROOM_WC]);
     lv_obj_set_style_text_font(WC_label1, FONT_24, 0);
+    lv_obj_add_flag(WC_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(WC_label1, "WC");
     lv_obj_align(WC_label1, LV_ALIGN_TOP_LEFT, 5, 0);
 
     WC_label2 = lv_label_create(cards[ROOM_WC]);
     lv_obj_set_style_text_font(WC_label2, FONT_14, 0);
+    lv_obj_add_flag(WC_label2, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(WC_label2, "0000 hPa");
     lv_obj_align(WC_label2, LV_ALIGN_TOP_LEFT, 5, 45);
 
@@ -277,16 +287,19 @@ void createRoomCards() {
 
     UT_label1 = lv_label_create(cards[ROOM_UT]);
     lv_obj_set_style_text_font(UT_label1, FONT_24, 0);
+    lv_obj_add_flag(UT_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(UT_label1, "UT");
     lv_obj_align(UT_label1, LV_ALIGN_TOP_LEFT, 5, 0);
 
     UT_label2 = lv_label_create(cards[ROOM_UT]);
     lv_obj_set_style_text_font(UT_label2, FONT_14, 0);
+    lv_obj_add_flag(UT_label2, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(UT_label2, "00.0°");
     lv_obj_align(UT_label2, LV_ALIGN_TOP_LEFT, 5, 30);
 
     UT_label3 = lv_label_create(cards[ROOM_UT]);
     lv_obj_set_style_text_font(UT_label3, FONT_14, 0);
+    lv_obj_add_flag(UT_label3, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(UT_label3, "00.0%");
     lv_obj_align(UT_label3, LV_ALIGN_TOP_LEFT, 5, 45);
 
@@ -299,16 +312,19 @@ void createRoomCards() {
 
     KOP_label1 = lv_label_create(cards[ROOM_KOP]);
     lv_obj_set_style_text_font(KOP_label1, FONT_24, 0);
+    lv_obj_add_flag(KOP_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(KOP_label1, "KOP");
     lv_obj_align(KOP_label1, LV_ALIGN_TOP_LEFT, 5, 0);
 
     KOP_label2 = lv_label_create(cards[ROOM_KOP]);
     lv_obj_set_style_text_font(KOP_label2, FONT_14, 0);
+    lv_obj_add_flag(KOP_label2, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(KOP_label2, "00.0°");
     lv_obj_align(KOP_label2, LV_ALIGN_TOP_LEFT, 5, 30);
 
     KOP_label3 = lv_label_create(cards[ROOM_KOP]);
     lv_obj_set_style_text_font(KOP_label3, FONT_14, 0);
+    lv_obj_add_flag(KOP_label3, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(KOP_label3, "00.0%");
     lv_obj_align(KOP_label3, LV_ALIGN_TOP_LEFT, 5, 45);
 
@@ -321,26 +337,31 @@ void createRoomCards() {
 
     DS_label1 = lv_label_create(cards[ROOM_DS]);
     lv_obj_set_style_text_font(DS_label1, FONT_24, 0);
+    lv_obj_add_flag(DS_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(DS_label1, "DS");
     lv_obj_align(DS_label1, LV_ALIGN_TOP_LEFT, 5, 10);
 
     DS_label2 = lv_label_create(cards[ROOM_DS]);
     lv_obj_set_style_text_font(DS_label2, FONT_14, 0);
+    lv_obj_add_flag(DS_label2, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(DS_label2, "00.0°");
     lv_obj_align(DS_label2, LV_ALIGN_TOP_LEFT, 75, 10);
 
     DS_label3 = lv_label_create(cards[ROOM_DS]);
     lv_obj_set_style_text_font(DS_label3, FONT_14, 0);
+    lv_obj_add_flag(DS_label3, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(DS_label3, "00.0%");
     lv_obj_align(DS_label3, LV_ALIGN_TOP_LEFT, 75, 30);
 
     DS_label4 = lv_label_create(cards[ROOM_DS]);
     lv_obj_set_style_text_font(DS_label4, FONT_14, 0);
+    lv_obj_add_flag(DS_label4, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(DS_label4, "000 ppm");
     lv_obj_align(DS_label4, LV_ALIGN_TOP_LEFT, 140, 10);
 
     DS_label5 = lv_label_create(cards[ROOM_DS]);
     lv_obj_set_style_text_font(DS_label5, FONT_14, 0);
+    lv_obj_add_flag(DS_label5, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(DS_label5, "000");
     lv_obj_align(DS_label5, LV_ALIGN_TOP_LEFT, 140, 30);
 
@@ -353,6 +374,7 @@ void createRoomCards() {
 
     S_label1 = lv_label_create(skylight_btn);
     lv_obj_set_style_text_font(S_label1, FONT_24, 0);
+    lv_obj_add_flag(S_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(S_label1, "S");
     lv_obj_align(S_label1, LV_ALIGN_CENTER, 0, 0);
 
@@ -364,6 +386,7 @@ void createRoomCards() {
 
     B_label1 = lv_label_create(balcony_btn);
     lv_obj_set_style_text_font(B_label1, FONT_24, 0);
+    lv_obj_add_flag(B_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(B_label1, "B");
     lv_obj_align(B_label1, LV_ALIGN_CENTER, 0, 0);
 
@@ -394,7 +417,7 @@ void createRoomCards() {
 
 static void button_event_cb(lv_event_t * e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * btn = lv_event_get_target(e);
+    lv_obj_t * btn = lv_event_get_current_target(e);
     int roomId = (int)lv_event_get_user_data(e);
 
     if (code == LV_EVENT_PRESSED) {
