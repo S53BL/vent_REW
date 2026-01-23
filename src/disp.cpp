@@ -28,6 +28,8 @@ lv_obj_t* cards[6];
 lv_obj_t* weather_icon;
 lv_obj_t* wifi_icon;
 
+const char* roomNames[8] = {"EXT", "TIME_WIFI", "WC", "UT", "KOP", "DS", "S", "B"};
+
 // EXT labels
 lv_obj_t* EXT_label1;
 lv_obj_t* EXT_label2;
@@ -367,6 +369,27 @@ void createRoomCards() {
 
     lv_obj_invalidate(lv_scr_act());
     lv_refr_now(NULL);
+
+    lv_refr_now(NULL); // force layout update before prints
+
+    // Debug prints after flex resolve
+    lv_area_t coords;
+    lv_obj_get_coords(cards[ROOM_EXT], &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_EXT], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_EXT]), lv_obj_get_height(cards[ROOM_EXT]));
+    lv_obj_get_coords(cards[ROOM_TIME_WIFI], &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_TIME_WIFI], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_TIME_WIFI]), lv_obj_get_height(cards[ROOM_TIME_WIFI]));
+    lv_obj_get_coords(cards[ROOM_WC], &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_WC], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_WC]), lv_obj_get_height(cards[ROOM_WC]));
+    lv_obj_get_coords(cards[ROOM_UT], &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_UT], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_UT]), lv_obj_get_height(cards[ROOM_UT]));
+    lv_obj_get_coords(cards[ROOM_KOP], &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_KOP], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_KOP]), lv_obj_get_height(cards[ROOM_KOP]));
+    lv_obj_get_coords(cards[ROOM_DS], &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_DS], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_DS]), lv_obj_get_height(cards[ROOM_DS]));
+    lv_obj_get_coords(skylight_btn, &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[6], coords.x1, coords.y1, lv_obj_get_width(skylight_btn), lv_obj_get_height(skylight_btn));
+    lv_obj_get_coords(balcony_btn, &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[7], coords.x1, coords.y1, lv_obj_get_width(balcony_btn), lv_obj_get_height(balcony_btn));
 }
 
 static void button_event_cb(lv_event_t * e) {
@@ -375,6 +398,9 @@ static void button_event_cb(lv_event_t * e) {
     int roomId = (int)lv_event_get_user_data(e);
 
     if (code == LV_EVENT_PRESSED) {
+        lv_area_t coords;
+        lv_obj_get_coords(btn, &coords);
+        Serial.printf("[UI] Pressed %s at abs x1=%d y1=%d\n", roomNames[roomId], coords.x1, coords.y1);
         touch_press_time = millis();
         lv_anim_t a;
         lv_anim_init(&a);
@@ -396,11 +422,11 @@ static void button_event_cb(lv_event_t * e) {
         lv_anim_start(&a);
         if (duration < 500) {
             // Short press: on
-            Serial.printf("[UI] Short press room %d: ON\n", roomId);
+            Serial.printf("[UI] Short press %s: ON\n", roomNames[roomId]);
             // TODO: Send MANUAL_CONTROL POST to CEW with roomId=0
         } else {
             // Long press: disable
-            Serial.printf("[UI] Long press room %d: DISABLE\n", roomId);
+            Serial.printf("[UI] Long press %s: DISABLE\n", roomNames[roomId]);
             // TODO: Send MANUAL_CONTROL POST to CEW with roomId=1
         }
     }

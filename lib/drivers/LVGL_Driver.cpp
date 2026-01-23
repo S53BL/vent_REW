@@ -34,10 +34,10 @@ void Lvgl_Display_LCD( lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
 /*Read the touchpad*/
 void Lvgl_Touchpad_Read( lv_indev_drv_t * indev_drv, lv_indev_data_t * data )
 {
-  const int TS_MINX = 70;
-  const int TS_MAXX = 145;
-  const int TS_MINY = 52;
-  const int TS_MAXY = 283;
+  const int TS_MINX = 1;
+  const int TS_MAXX = 239;
+  const int TS_MINY = 1;
+  const int TS_MAXY = 319;
 
   static uint32_t lastTouchLog = 0;
 
@@ -51,15 +51,16 @@ void Lvgl_Touchpad_Read( lv_indev_drv_t * indev_drv, lv_indev_data_t * data )
     if (millis() - lastTouchLog > 1000) {
       Serial.printf("Touch raw: x=%d y=%d\n", touchpad_x[0], touchpad_y[0]);
       Serial.flush();
-      data->point.x = map(touchpad_x[0], TS_MINX, TS_MAXX, 0, 320);
-      data->point.y = map(touchpad_y[0], TS_MINY, TS_MAXY, 0, 240);
-      // Če upside down: data->point.y = 240 - data->point.y;
+      // Swapped for 90 degree rotation with invert on y
+      data->point.x = map(TS_MAXY - touchpad_y[0], 0, TS_MAXY - TS_MINY, 0, 320);
+      data->point.y = map(touchpad_x[0], TS_MINX, TS_MAXX, 0, 240);
       Serial.printf("Calibrated touch: x=%d y=%d\n", data->point.x, data->point.y);
       Serial.flush();
       lastTouchLog = millis();
     } else {
-      data->point.x = map(touchpad_x[0], TS_MINX, TS_MAXX, 0, 320);
-      data->point.y = map(touchpad_y[0], TS_MINY, TS_MAXY, 0, 240);
+      // Swapped for 90 degree rotation with invert on y
+      data->point.x = map(TS_MAXY - touchpad_y[0], 0, TS_MAXY - TS_MINY, 0, 320);
+      data->point.y = map(touchpad_x[0], TS_MINX, TS_MAXX, 0, 240);
     }
     // Bounds check
     if (data->point.x < 0 || data->point.x > 320 || data->point.y < 0 || data->point.y > 240) {
