@@ -194,7 +194,6 @@ struct SensorData {
 // Enums
 enum TabType { TAB_ROOMS, TAB_GRAPHS };
 enum GraphType { GRAPH_TEMP, GRAPH_HUM, GRAPH_CO2, GRAPH_FAN };
-enum RoomIndex { ROOM_EXT, ROOM_UT, ROOM_KOP, ROOM_WC, ROOM_DS, ROOM_TIME_WIFI };
 enum TouchAction { TOUCH_SHORT, TOUCH_LONG };
 enum ErrorFlag {
     ERR_NONE = 0,

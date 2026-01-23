@@ -145,6 +145,7 @@ static void button_event_cb(lv_event_t * e);
 void createRoomCards() {
     // EXT
     cards[ROOM_EXT] = lv_btn_create(lv_scr_act());
+    lv_obj_set_user_data(cards[ROOM_EXT], (void*)ROOM_EXT);
     lv_obj_set_pos(cards[ROOM_EXT], 2, 1);
     lv_obj_set_size(cards[ROOM_EXT], 173, 80);
     lv_obj_add_style(cards[ROOM_EXT], &style_card, 0);
@@ -179,6 +180,7 @@ void createRoomCards() {
 
     // TIME_WIFI
     cards[ROOM_TIME_WIFI] = lv_btn_create(lv_scr_act());
+    lv_obj_set_user_data(cards[ROOM_TIME_WIFI], (void*)ROOM_TIME_WIFI);
     lv_obj_set_pos(cards[ROOM_TIME_WIFI], 181, 1);
     lv_obj_set_size(cards[ROOM_TIME_WIFI], 137, 80);
     lv_obj_add_style(cards[ROOM_TIME_WIFI], &style_card, 0);
@@ -216,6 +218,7 @@ void createRoomCards() {
 
     // WC
     cards[ROOM_WC] = lv_btn_create(lv_scr_act());
+    lv_obj_set_user_data(cards[ROOM_WC], (void*)ROOM_WC);
     lv_obj_set_pos(cards[ROOM_WC], 2, 85);
     lv_obj_set_size(cards[ROOM_WC], 101, 80);
     lv_obj_add_style(cards[ROOM_WC], &style_card, 0);
@@ -236,6 +239,7 @@ void createRoomCards() {
 
     // UT
     cards[ROOM_UT] = lv_btn_create(lv_scr_act());
+    lv_obj_set_user_data(cards[ROOM_UT], (void*)ROOM_UT);
     lv_obj_set_pos(cards[ROOM_UT], 109, 85);
     lv_obj_set_size(cards[ROOM_UT], 101, 80);
     lv_obj_add_style(cards[ROOM_UT], &style_card, 0);
@@ -262,6 +266,7 @@ void createRoomCards() {
 
     // KOP
     cards[ROOM_KOP] = lv_btn_create(lv_scr_act());
+    lv_obj_set_user_data(cards[ROOM_KOP], (void*)ROOM_KOP);
     lv_obj_set_pos(cards[ROOM_KOP], 216, 85);
     lv_obj_set_size(cards[ROOM_KOP], 101, 80);
     lv_obj_add_style(cards[ROOM_KOP], &style_card, 0);
@@ -288,6 +293,7 @@ void createRoomCards() {
 
     // DS
     cards[ROOM_DS] = lv_btn_create(lv_scr_act());
+    lv_obj_set_user_data(cards[ROOM_DS], (void*)ROOM_DS);
     lv_obj_set_pos(cards[ROOM_DS], 2, 169);
     lv_obj_set_size(cards[ROOM_DS], 252, 67);
     lv_obj_add_style(cards[ROOM_DS], &style_card, 0);
@@ -325,28 +331,30 @@ void createRoomCards() {
     lv_obj_align(DS_label5, LV_ALIGN_TOP_LEFT, 140, 30);
 
     // S
-    cards[6] = lv_btn_create(lv_scr_act());
-    lv_obj_set_pos(cards[6], 258, 169);
-    lv_obj_set_size(cards[6], 28, 67);
-    lv_obj_add_style(cards[6], &style_card, 0);
-    lv_obj_set_style_bg_color(cards[6], lv_color_hex(BTN_CLOSED_COLOR), 0);
-    lv_obj_add_event_cb(cards[6], button_event_cb, LV_EVENT_ALL, (void*)6); // Placeholder
+    cards[ROOM_S] = lv_btn_create(lv_scr_act());
+    lv_obj_set_user_data(cards[ROOM_S], (void*)ROOM_S);
+    lv_obj_set_pos(cards[ROOM_S], 258, 169);
+    lv_obj_set_size(cards[ROOM_S], 28, 67);
+    lv_obj_add_style(cards[ROOM_S], &style_card, 0);
+    lv_obj_set_style_bg_color(cards[ROOM_S], lv_color_hex(BTN_CLOSED_COLOR), 0);
+    lv_obj_add_event_cb(cards[ROOM_S], button_event_cb, LV_EVENT_ALL, (void*)ROOM_S);
 
-    S_label1 = lv_label_create(cards[6]);
+    S_label1 = lv_label_create(cards[ROOM_S]);
     lv_obj_set_style_text_font(S_label1, FONT_24, 0);
     lv_obj_add_flag(S_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(S_label1, "S");
     lv_obj_align(S_label1, LV_ALIGN_CENTER, 0, 0);
 
     // B
-    cards[7] = lv_btn_create(lv_scr_act());
-    lv_obj_set_pos(cards[7], 290, 169);
-    lv_obj_set_size(cards[7], 28, 67);
-    lv_obj_add_style(cards[7], &style_card, 0);
-    lv_obj_set_style_bg_color(cards[7], lv_color_hex(BTN_CLOSED_COLOR), 0);
-    lv_obj_add_event_cb(cards[7], button_event_cb, LV_EVENT_ALL, (void*)7); // Placeholder
+    cards[ROOM_B] = lv_btn_create(lv_scr_act());
+    lv_obj_set_user_data(cards[ROOM_B], (void*)ROOM_B);
+    lv_obj_set_pos(cards[ROOM_B], 290, 169);
+    lv_obj_set_size(cards[ROOM_B], 28, 67);
+    lv_obj_add_style(cards[ROOM_B], &style_card, 0);
+    lv_obj_set_style_bg_color(cards[ROOM_B], lv_color_hex(BTN_CLOSED_COLOR), 0);
+    lv_obj_add_event_cb(cards[ROOM_B], button_event_cb, LV_EVENT_ALL, (void*)ROOM_B);
 
-    B_label1 = lv_label_create(cards[7]);
+    B_label1 = lv_label_create(cards[ROOM_B]);
     lv_obj_set_style_text_font(B_label1, FONT_24, 0);
     lv_obj_add_flag(B_label1, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_label_set_text(B_label1, "B");
@@ -371,16 +379,16 @@ void createRoomCards() {
     Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_KOP], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_KOP]), lv_obj_get_height(cards[ROOM_KOP]));
     lv_obj_get_coords(cards[ROOM_DS], &coords);
     Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_DS], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_DS]), lv_obj_get_height(cards[ROOM_DS]));
-    lv_obj_get_coords(cards[6], &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[6], coords.x1, coords.y1, lv_obj_get_width(cards[6]), lv_obj_get_height(cards[6]));
-    lv_obj_get_coords(cards[7], &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[7], coords.x1, coords.y1, lv_obj_get_width(cards[7]), lv_obj_get_height(cards[7]));
+    lv_obj_get_coords(cards[ROOM_S], &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_S], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_S]), lv_obj_get_height(cards[ROOM_S]));
+    lv_obj_get_coords(cards[ROOM_B], &coords);
+    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_B], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_B]), lv_obj_get_height(cards[ROOM_B]));
 }
 
 static void button_event_cb(lv_event_t * e) {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t * btn = lv_event_get_current_target(e);
-    int roomId = (int)lv_event_get_user_data(e);
+    int roomId = (int)lv_obj_get_user_data(btn);
 
     if (code == LV_EVENT_PRESSED) {
         lv_area_t coords;
