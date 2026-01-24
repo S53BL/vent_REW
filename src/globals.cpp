@@ -29,6 +29,7 @@ String currentLogFile = "";
 String lastDate = "";
 String logBuffer = "";
 uint32_t lastHistorySave = 0;
+bool loggingInitialized = false;
 
 bool is_pressed = false;
 unsigned long touch_press_time = 0;

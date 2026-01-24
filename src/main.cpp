@@ -12,6 +12,7 @@
 #include "disp.h"
 #include "http.h"
 #include "sd.h"
+#include "logging.h"
 #include <Touch_CST328.h>
 
 TwoWire WireTouch = TwoWire(TOUCH_I2C_BUS);
@@ -22,22 +23,38 @@ uint8_t point_num = 0;
 uint8_t max_point_num = 1;
 
 bool setupWiFi() {
+    Serial.println("WiFi:Configuring static IP...");
     WiFi.config(localIP, gateway, subnet, dns);
-    for (int i = 0; i < sizeof(ssidList)/sizeof(ssidList[0]); i++) {
+    Serial.println("WiFi:Static IP configured");
+
+    int numNetworks = sizeof(ssidList)/sizeof(ssidList[0]);
+    Serial.printf("WiFi:Trying %d networks...\n", numNetworks);
+
+    for (int i = 0; i < numNetworks; i++) {
+        Serial.printf("WiFi:Trying network %d: %s\n", i+1, ssidList[i]);
         WiFi.begin(ssidList[i], passwordList[i]);
+
         unsigned long start = millis();
-        while (millis() - start < 10000 && WiFi.status() != WL_CONNECTED) {
-            delay(500);
+        int attempts = 0;
+        while (millis() - start < 15000) {  // Increased timeout to 15s
+            wl_status_t status = WiFi.status();
+            Serial.printf("WiFi:Status=%d (attempt %d)\n", status, ++attempts);
+            if (status == WL_CONNECTED) {
+                wifiSSID = ssidList[i];
+                Serial.printf("WiFi:Connected! IP=%s\n", WiFi.localIP().toString().c_str());
+                logEvent("WiFi:Connected to " + wifiSSID + " IP=" + WiFi.localIP().toString());
+                sensorData.errorFlags[0] &= ~ERR_WIFI;
+                return true;
+            }
+            delay(1000);  // Log every second
         }
-        if (WiFi.status() == WL_CONNECTED) {
-            wifiSSID = ssidList[i];
-            Serial.printf("Connected to %s, IP: %s\n", wifiSSID, WiFi.localIP().toString().c_str());
-            sensorData.errorFlags[0] &= ~ERR_WIFI;
-            return true;
-        }
+        Serial.printf("WiFi:Network %s timeout\n", ssidList[i]);
+        WiFi.disconnect();
+        delay(1000);
     }
+    Serial.println("WiFi:All networks failed");
     sensorData.errorFlags[0] |= ERR_WIFI;
-    Serial.println("WiFi connection failed");
+    logEvent("WiFi:Connection failed - all networks tried");
     return false;
 }
 
@@ -49,19 +66,26 @@ void setupNTP() {
 }
 
 void setup() {
+    // 1. Serial init (Serial-only, pre-logging)
     Serial.begin(115200);
     Serial.println("\n\n=== TEST SERIAL OUTPUT ===");
     Serial.flush();
     delay(500);
     Serial.println("Baud: 115200 - if you see this, filters are off");
     Serial.flush();
-    Serial.println("Starting setup...");
 
+    // 2. Basic structures
     Serial.println("Initializing globals...");
     initGlobals();
-    Serial.println("Globals initialized");
+    Serial.println("Globals init complete");
 
-    // Initialize modules
+    // 3. Early logging initialization
+    Serial.println("Initializing logging...");
+    initLogging();
+    logEvent("Setup:Logging initialized");
+    Serial.println("Logging init complete");
+
+    // 4. Initialize modules (original sequence)
     Serial.println("Initializing I2C...");
     Wire.begin(SDA_PIN, SCL_PIN);
     Wire.setClock(100000);
@@ -88,16 +112,10 @@ void setup() {
         Serial.println("SD card initialized");
     }
 
+    // 5. WiFi + NTP setup (after hardware init)
     Serial.println("Setting up WiFi...");
     bool wifiConnected = setupWiFi();
     Serial.println("WiFi setup complete");
-
-    Serial.println("Setting up HTTP server...");
-    if (!setupServer()) {
-        Serial.println("HTTP server init failed");
-    } else {
-        Serial.println("HTTP server initialized");
-    }
 
     if (wifiConnected) {
         sendHeartbeat();
@@ -116,15 +134,21 @@ void setup() {
         Serial.println("NTP setup complete");
     }
 
-    Serial.println("Loading settings...");
+    Serial.println("Setting up HTTP server...");
+    if (!setupServer()) {
+        Serial.println("HTTP server init failed");
+    } else {
+        Serial.println("HTTP server initialized");
+    }
+
+    logEvent("Setup:Loading settings");
     loadSettings();
-    Serial.println("Settings loaded");
 
     // Enable watchdog
     esp_task_wdt_init(10, true); // 10s timeout, panic on timeout
     esp_task_wdt_add(NULL);
 
-    Serial.println("System initialized successfully");
+    logEvent("Setup:Complete - system ready");
 }
 
 void loop() {
@@ -168,7 +192,7 @@ void loop() {
 
     // Periodic sensor reset if error
     if ((sensorData.errorFlags[0] & ERR_SENSOR) && now - lastSensorReset >= 60000) {
-        Serial.println("[Main] Resetting sensors due to error");
+        logEvent("Main:Resetting sensors due to error");
         resetSensors();
         lastSensorReset = now;
     }
@@ -179,7 +203,7 @@ void loop() {
         lastWiFiCheck = now;
         if (WiFi.status() != WL_CONNECTED) {
             connection_ok = false;
-            Serial.println("WiFi disconnected, attempting reconnect");
+            logEvent("WiFi:Disconnected - attempting reconnect");
             for (int attempt = 0; attempt < WIFI_RETRY_COUNT; attempt++) {
                 if (setupWiFi()) {
                     sensorData.errorFlags[0] &= ~ERR_WIFI;

@@ -34,5 +34,6 @@ extern String currentLogFile;
 extern String lastDate;
 extern String logBuffer;
 extern uint32_t lastHistorySave;
+extern bool loggingInitialized;
 
 #endif // GLOBALS_H

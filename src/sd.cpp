@@ -1,12 +1,13 @@
 // sd.cpp - SD card module implementation
 #include "sd.h"
 #include "globals.h"
+#include "logging.h"
 
 bool initSD() {
     SD_MMC.setPins(14,17,16);
     if (!SD_MMC.begin("/sdcard", true)) {
         sensorData.errorFlags[0] |= ERR_SD;
-        Serial.println("SD init failed - check pins");
+        logEvent("SD:Init failed - check pins");
         return false;
     }
     return true;
@@ -14,7 +15,7 @@ bool initSD() {
 
 void saveHistorySens() {
   if (sensorData.errorFlags[0] & ERR_SD) {
-    Serial.println("SD ERR");
+    logEvent("SD:ERR - cannot save sensor history");
     return;
   }
   String currentDate = myTZ.dateTime("Y-m-d");
@@ -23,7 +24,7 @@ void saveHistorySens() {
     currentSensFile = String("/history_sens_") + myTZ.dateTime("Ymd") + String(".csv");
     File file = SD_MMC.open(currentSensFile.c_str(), FILE_WRITE);
     if (!file) {
-      Serial.println("SD open fail");
+      logEvent("SD:Open fail for new sensor history file");
       return;
     }
     file.println("Čas zapisa,Temperatura zunaj,Vlaga zunaj,Tlak zunaj,VOC zunaj,Svetloba zunaj,Temperatura DS,Vlaga DS,CO2 DS,Temperatura UT,Vlaga UT,Temperatura KOP,Vlaga KOP,Tlak WC,Vremenski code");
@@ -31,7 +32,7 @@ void saveHistorySens() {
   }
   File file = SD_MMC.open(currentSensFile.c_str(), FILE_APPEND);
   if (!file) {
-    Serial.println("SD open fail");
+    logEvent("SD:Open fail for sensor history append");
     return;
   }
   char line[256];
@@ -57,12 +58,12 @@ void saveHistorySens() {
           sensorData.weatherCode);
   file.println(line);
   file.close();
-  Serial.println("Sens saved to " + currentSensFile);
+  logEvent("SD:Sens saved to " + currentSensFile);
 }
 
 void saveFanHistory() {
   if (sensorData.errorFlags[0] & ERR_SD) {
-    Serial.println("SD ERR");
+    logEvent("SD:ERR - cannot save fan history");
     return;
   }
   String currentDate = myTZ.dateTime("Y-m-d");
@@ -71,7 +72,7 @@ void saveFanHistory() {
     currentFanFile = String("/fan_history_") + myTZ.dateTime("Ymd") + String(".csv");
     File file = SD_MMC.open(currentFanFile.c_str(), FILE_WRITE);
     if (!file) {
-      Serial.println("SD open fail");
+      logEvent("SD:Open fail for new fan history file");
       return;
     }
     file.println("Čas zapisa,WC stanje,UT stanje,KOP stanje,DS stanje");
@@ -79,7 +80,7 @@ void saveFanHistory() {
   }
   File file = SD_MMC.open(currentFanFile.c_str(), FILE_APPEND);
   if (!file) {
-    Serial.println("SD open fail");
+    logEvent("SD:Open fail for fan history append");
     return;
   }
   char line[128];
@@ -96,10 +97,10 @@ void saveFanHistory() {
           dsState.c_str());
   file.println(line);
   file.close();
-  Serial.println("Fan saved to " + currentFanFile);
+  logEvent("SD:Fan saved to " + currentFanFile);
 }
 
 void flushLogs() {
-  Serial.println("Flushing logs...");
+  logEvent("SD:Flushing logs");
   /* placeholder za log flush */
 }

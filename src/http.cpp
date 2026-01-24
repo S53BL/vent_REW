@@ -2,6 +2,7 @@
 #include "http.h"
 #include "globals.h"
 #include "sd.h"
+#include "logging.h"
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -10,8 +11,14 @@
 
 AsyncWebServer server(80);
 
+// Flag to track first HTTP attempt after boot (longer timeout)
+static bool firstHttpAttempt = true;
+
+// Forward declaration for lambda functions
+extern void logEvent(String content);
+
 bool setupServer() {
-    Serial.println("    Setting up server endpoints...");
+    logEvent("HTTP:Setting up server endpoints");
     // Endpoint for receiving data from external unit
     server.on("/data", HTTP_POST, [](AsyncWebServerRequest *request){
         String body = request->arg("plain");
@@ -26,8 +33,11 @@ bool setupServer() {
         sensorData.extPressure = doc["pressure"] | 0.0f;
         sensorData.extVOC = doc["voc"] | 0.0f;
         sensorData.extLux = doc["lux"] | 0.0f;
-        Serial.printf("[HTTP] Received from SEW: temp=%.1f, hum=%.1f, pressure=%.1f, voc=%.1f, lux=%.1f\n",
-                      sensorData.extTemp, sensorData.extHumidity, sensorData.extPressure, sensorData.extVOC, sensorData.extLux);
+        logEvent("HTTP:Recv SEW temp=" + String(sensorData.extTemp, 1) +
+                 " hum=" + String(sensorData.extHumidity, 1) +
+                 " pressure=" + String(sensorData.extPressure, 1) +
+                 " voc=" + String(sensorData.extVOC, 0) +
+                 " lux=" + String(sensorData.extLux, 0));
         lastSEWReceive = millis();
         request->send(200, "application/json", "{\"status\":\"OK\"}");
         // sendToCEW() call removed as it's now parameterized
@@ -45,7 +55,7 @@ bool setupServer() {
         DeserializationError error = deserializeJson(doc, body);
         if (error) {
             request->send(400, "text/plain", "Invalid JSON");
-            Serial.println("[HTTP] Invalid STATUS_UPDATE JSON");
+            logEvent("HTTP:Invalid STATUS_UPDATE JSON");
             return;
         }
         if (doc.containsKey("fanStates")) {
@@ -71,7 +81,7 @@ bool setupServer() {
         if (doc.containsKey("errorFlags")) {
             for (int i = 0; i < 5; i++) sensorData.errorFlags[i] = doc["errorFlags"][i].as<uint8_t>();
         }
-        Serial.println("[HTTP] STATUS_UPDATE received: fanStates=[...], power=%.1f, errors=[...]");
+        logEvent("HTTP:STATUS_UPDATE received power=" + String(sensorData.currentPower, 1));
         lastStatusUpdate = millis();
         request->send(200, "application/json", "{\"status\":\"OK\"}");
         extern void updateCards();
@@ -79,10 +89,56 @@ bool setupServer() {
         saveFanHistory();
     });
 
-    Serial.println("    Starting server...");
+    // LOGS endpoint for receiving CEW logs
+    server.on("/api/logs", HTTP_POST, [](AsyncWebServerRequest *request){
+        String body = request->arg("plain");
+        DynamicJsonDocument doc(2048);
+        DeserializationError error = deserializeJson(doc, body);
+        if (error) {
+            request->send(400, "text/plain", "Invalid JSON");
+            logEvent("HTTP:Invalid LOGS JSON");
+            return;
+        }
+
+        String logsContent = doc["logs"] | "";
+        if (logsContent.length() == 0) {
+            request->send(400, "text/plain", "No logs content");
+            logEvent("HTTP:No logs content in request");
+            return;
+        }
+
+        logEvent("HTTP:Received " + String(logsContent.length()) + " bytes of CEW logs");
+
+        // Append CEW logs to current date file
+        String currentDate = myTZ.dateTime("Ymd");
+        String logFileName = "/logs_" + currentDate + ".txt";
+
+        File logFile = SD_MMC.open(logFileName.c_str(), FILE_APPEND);
+        if (!logFile) {
+            logEvent("HTTP:Failed to open log file for CEW logs: " + logFileName);
+            request->send(500, "text/plain", "Failed to open log file");
+            return;
+        }
+
+        size_t bytesWritten = logFile.print(logsContent);
+        logFile.close();
+
+        if (bytesWritten > 0) {
+            logEvent("HTTP:Appended " + String(bytesWritten) + " bytes of CEW logs to " + logFileName);
+            // Flush REW buffer after receiving CEW logs
+            extern void flushBufferToSD();
+            flushBufferToSD();
+        } else {
+            logEvent("HTTP:Failed to write CEW logs to file");
+        }
+
+        request->send(200, "application/json", "{\"status\":\"OK\"}");
+    });
+
+    logEvent("HTTP:Starting server");
     server.begin();
     webServerRunning = true;
-    Serial.println("    Server started");
+    logEvent("HTTP:Server started");
     return true;
 }
 
@@ -93,19 +149,24 @@ void handleClient() {
 
 
 void sendToCEW(String method, String endpoint, String jsonPayload) {
-    Serial.printf("[JSON] %s: %s\n", endpoint.c_str(), jsonPayload.c_str());
+    logEvent("HTTP:Send " + method + " to " + endpoint + " payload=" + jsonPayload);
 
     if (!connection_ok || WiFi.status() != WL_CONNECTED) {
-        Serial.println("[HTTP] - not sent: connection not ok or WiFi err");
+        logEvent("HTTP:Not sent - connection not OK or WiFi err");
         sensorData.errorFlags[0] |= ERR_HTTP;
         return;
     }
     HTTPClient http;
-    http.setTimeout(2000);
-    http.setConnectTimeout(2000);  // Set connection timeout to 2000ms
+
+    // Use longer timeout for first attempt after boot
+    int timeout = firstHttpAttempt ? 10000 : 2000;
+    firstHttpAttempt = false;  // Reset flag after first use
+
+    http.setTimeout(timeout);
+    http.setConnectTimeout(timeout);
     String url = "http://" + String(CEW_IP) + endpoint;
     if (!http.begin(url)) {
-        Serial.println("[HTTP] begin failed");
+        logEvent("HTTP:Begin failed for " + url);
         connection_ok = false;
         return;
     }
@@ -116,17 +177,17 @@ void sendToCEW(String method, String endpoint, String jsonPayload) {
     } else if (method == "GET") {
         httpCode = http.GET();
     } else {
-        Serial.println("[HTTP] invalid method");
+        logEvent("HTTP:Invalid method " + method);
         http.end();
         return;
     }
     if (httpCode == HTTP_CODE_OK) {
         lastSuccessfulHeartbeat = millis();
         connection_ok = true;
-        Serial.println("[HTTP] sent OK");
+        logEvent("HTTP:Send OK to " + endpoint);
         sensorData.errorFlags[0] &= ~ERR_HTTP;
     } else {
-        Serial.printf("[HTTP] Send failed: %d to %s\n", httpCode, endpoint.c_str());
+        logEvent("HTTP:Send failed code=" + String(httpCode) + " to " + endpoint);
         delay(1000);
         yield();
         // 1x retry
@@ -138,9 +199,9 @@ void sendToCEW(String method, String endpoint, String jsonPayload) {
         if (httpCode == HTTP_CODE_OK) {
             lastSuccessfulHeartbeat = millis();
             connection_ok = true;
-            Serial.println("[HTTP] sent OK (retry)");
+            logEvent("HTTP:Send OK (retry) to " + endpoint);
         } else {
-            Serial.println("[HTTP] not sent: CEW offline");
+            logEvent("HTTP:Not sent - CEW offline");
             connection_ok = false;
             sensorData.errorFlags[0] |= ERR_HTTP;
         }
@@ -151,11 +212,17 @@ void sendToCEW(String method, String endpoint, String jsonPayload) {
 
 bool sendHeartbeat() {
     HTTPClient http;
-    http.setTimeout(2000);
-    http.setConnectTimeout(2000);  // Set connection timeout to 2000ms
+
+    // Use longer timeout for first attempt after boot
+    int timeout = firstHttpAttempt ? 10000 : 2000;
+    firstHttpAttempt = false;  // Reset flag after first use
+
+    http.setTimeout(timeout);
+    http.setConnectTimeout(timeout);
+
     String url = "http://" + String(CEW_IP) + "/api/ping";
     if (!http.begin(url)) {
-        Serial.println("[HTTP] Heartbeat begin failed");
+        logEvent("HTTP:Heartbeat begin failed");
         return false;
     }
     int httpCode = http.GET();
@@ -164,10 +231,10 @@ bool sendHeartbeat() {
         lastSuccessfulHeartbeat = millis();
         sensorData.errorFlags[0] &= ~ERR_HTTP;
         connection_ok = true;
-        Serial.println("[HTTP] Heartbeat success");
+        logEvent("HTTP:Heartbeat success");
         return true;
     } else {
-        Serial.printf("[HTTP] Heartbeat failed: %d\n", httpCode);
+        logEvent("HTTP:Heartbeat failed code=" + String(httpCode) + " (timeout=" + String(timeout) + "ms)");
         connection_ok = false;
         return false;
     }
