@@ -41,8 +41,6 @@ void Lvgl_Touchpad_Read( lv_indev_drv_t * indev_drv, lv_indev_data_t * data )
   const int TS_MINY = 1;
   const int TS_MAXY = 319;
 
-  static uint32_t lastTouchLog = 0;
-
   uint16_t touchpad_x[5] = {0};
   uint16_t touchpad_y[5] = {0};
   uint16_t strength[5]   = {0};
@@ -54,12 +52,6 @@ void Lvgl_Touchpad_Read( lv_indev_drv_t * indev_drv, lv_indev_data_t * data )
     // Swapped for 90 degree rotation with invert on y
     data->point.x = map(TS_MAXY - touchpad_y[0], 0, TS_MAXY - TS_MINY, 0, 320);
     data->point.y = map(touchpad_x[0], TS_MINX, TS_MAXX, 0, 240);
-    if (millis() - lastTouchLog > 1000) {
-      Serial.printf("Touch raw: x=%d y=%d\n", touchpad_x[0], touchpad_y[0]);
-      Serial.printf("Calibrated touch: x=%d y=%d\n", data->point.x, data->point.y);
-      Serial.flush();
-      lastTouchLog = millis();
-    }
   }
 
   // Set state based on debounced Touch_Get_XY return value

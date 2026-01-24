@@ -433,7 +433,6 @@ static void button_event_cb(lv_event_t * e) {
         lv_anim_set_time(&a, 150);
         lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
-        Serial.printf("[Anim] Start pressed zoom\n");
         lv_anim_start(&a);
     } else if (code == LV_EVENT_SHORT_CLICKED) {
         Serial.printf("[%lu] gumb [%s] kratek pritisk\n", millis(), roomNames[roomId]);
@@ -452,6 +451,15 @@ static void button_event_cb(lv_event_t * e) {
         Serial.printf("[%lu] gumb [%s] dolg pritisk\n", millis(), roomNames[roomId]);
         // Perform long action (e.g., disable fan)
         // TODO: send MANUAL_CONTROL POST to CEW with roomId=1
+        lv_anim_del(btn, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
+        lv_anim_t a;
+        lv_anim_init(&a);
+        lv_anim_set_var(&a, btn);
+        lv_anim_set_values(&a, 240, 256);
+        lv_anim_set_time(&a, 150);
+        lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
+        lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
+        lv_anim_start(&a);
     }
 }
 
