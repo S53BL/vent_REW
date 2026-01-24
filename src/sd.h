@@ -10,5 +10,9 @@ bool initSD();
 void saveHistorySens();
 void saveFanHistory();
 void flushLogs();
+String readFile(const char* path);
+String listFiles(const char* pattern, uint32_t from_date = 0, uint32_t to_date = UINT32_MAX);
+String listLogFiles(uint32_t from_date = 0, uint32_t to_date = UINT32_MAX);
+uint32_t parseDateFromName(String name);
 
 #endif // SD_H

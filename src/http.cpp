@@ -147,6 +147,8 @@ bool setupServer() {
         request->send(200, "application/json", "{\"status\":\"OK\"}");
     });
 
+    setupWebEndpoints();
+
     logEvent("HTTP:Starting server");
     server.begin();
     webServerRunning = true;

@@ -104,3 +104,46 @@ void flushLogs() {
   logEvent("SD:Flushing logs");
   /* placeholder za log flush */
 }
+
+String readFile(const char* path) {
+    File f = SD_MMC.open(path, FILE_READ);
+    if (!f) return "";
+    String s;
+    while (f.available()) s += (char)f.read();
+    f.close();
+    return s;
+}
+
+String listFiles(const char* pattern, uint32_t from_date, uint32_t to_date) {
+    String files = "";
+    File root = SD_MMC.open("/");
+    while (true) {
+        File entry = root.openNextFile();
+        if (!entry) break;
+        String name = entry.name();
+        if (strstr(name.c_str(), pattern)) {
+            uint32_t fileDate = parseDateFromName(name);
+            if (fileDate >= from_date && fileDate <= to_date) {
+                if (files.length() > 0) files += ",";
+                files += name;
+            }
+        }
+        entry.close();
+    }
+    root.close();
+    return files;
+}
+
+String listLogFiles(uint32_t from_date, uint32_t to_date) {
+    return listFiles("logs_", from_date, to_date);
+}
+
+uint32_t parseDateFromName(String name) {
+    int y = 0, m = 0, d = 0;
+    if (sscanf(name.c_str(), "/history_sens_%4d%2d%2d.csv", &y, &m, &d) == 3 ||
+        sscanf(name.c_str(), "/fan_history_%4d%2d%2d.csv", &y, &m, &d) == 3 ||
+        sscanf(name.c_str(), "/logs_%4d%2d%2d.txt", &y, &m, &d) == 3) {
+        return y * 10000 + m * 100 + d;
+    }
+    return 0;
+}

@@ -111,6 +111,8 @@ extern const char* ntpServers[];
 // Timezone string for Central European Time with DST
 #define TZ_STRING "CET-1CEST,M3.5.0,M10.5.0/3"
 
+#define MAX_ROWS 1000
+
 // WiFi icons (16x16 px, placeholders - replace with actual PNG converted data)
 // Defined in disp.cpp
 

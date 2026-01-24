@@ -10,5 +10,6 @@ void handleClient();
 void sendToCEW(String method, String endpoint, String jsonPayload);
 bool sendHeartbeat();
 void fetchWeather();
+void setupWebEndpoints();
 
 #endif // HTTP_H
