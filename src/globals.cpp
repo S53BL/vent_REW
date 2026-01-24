@@ -17,6 +17,7 @@ uint32_t lastArchive = 0;
 uint32_t lastSensorReset = 0;
 unsigned long lastSEWReceive = 0;
 unsigned long lastStatusUpdate = 0;
+unsigned long lastSuccessfulHeartbeat = 0;
 bool webServerRunning = false;
 bool timeSynced = false;
 String wifiSSID = "";

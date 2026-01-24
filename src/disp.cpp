@@ -1,6 +1,7 @@
 // disp.cpp - Display and UI module implementation
 #include "disp.h"
 #include "globals.h"
+#include "http.h"
 #include <Display_ST7789.h>
 #include <Touch_CST328.h>
 #include <LVGL_Driver.h>
@@ -437,7 +438,10 @@ static void button_event_cb(lv_event_t * e) {
     } else if (code == LV_EVENT_SHORT_CLICKED) {
         Serial.printf("[%lu] gumb [%s] kratek pritisk\n", millis(), roomNames[roomId]);
         // Perform short action (e.g., turn on fan)
-        // TODO: send MANUAL_CONTROL POST to CEW with roomId=0
+        if (roomId >= ROOM_WC && roomId <= ROOM_DS) {
+            String roomStr = (roomId == ROOM_WC) ? "wc" : (roomId == ROOM_UT) ? "ut" : (roomId == ROOM_KOP) ? "kop" : "ds";
+            sendManualControl(roomStr, "manual");
+        }
         lv_anim_del(btn, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_t a;
         lv_anim_init(&a);
@@ -450,7 +454,10 @@ static void button_event_cb(lv_event_t * e) {
     } else if (code == LV_EVENT_LONG_PRESSED) {
         Serial.printf("[%lu] gumb [%s] dolg pritisk\n", millis(), roomNames[roomId]);
         // Perform long action (e.g., disable fan)
-        // TODO: send MANUAL_CONTROL POST to CEW with roomId=1
+        if (roomId >= ROOM_WC && roomId <= ROOM_DS) {
+            String roomStr = (roomId == ROOM_WC) ? "wc" : (roomId == ROOM_UT) ? "ut" : (roomId == ROOM_KOP) ? "kop" : "ds";
+            sendManualControl(roomStr, "toggle");
+        }
         lv_anim_del(btn, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_t a;
         lv_anim_init(&a);
@@ -472,6 +479,8 @@ void updateUI() {
 }
 
 void updateCards() {
+    bool ceOffline = sensorData.errorFlags[0] & ERR_HTTP;
+
     // Update EXT
     lv_label_set_text_fmt(EXT_label1, "%.1f°", sensorData.extTemp);
     lv_label_set_text_fmt(EXT_label2, "%.1f%%", sensorData.extHumidity);
@@ -487,54 +496,92 @@ void updateCards() {
         lv_label_set_text(TIME_WIFI_label2, "--");
     }
     lv_label_set_text_fmt(TIME_WIFI_label3, "P=%.1f W", sensorData.currentPower);
-    lv_label_set_text_fmt(TIME_WIFI_label4, "E=%.1f Wh", sensorData.energyConsumption);
+    if (ceOffline) {
+        lv_label_set_text(TIME_WIFI_label4, "E=0000 Wh (OFF)");
+    } else {
+        lv_label_set_text_fmt(TIME_WIFI_label4, "E=%.1f Wh", sensorData.energyConsumption);
+    }
 
     // Update WC
-    if (sensorData.fanStates[0]) {
-        uint32_t remaining = sensorData.offTimes[0] - myTZ.now();
-        if (remaining > 0) {
-            lv_label_set_text_fmt(WC_label1, "%d", remaining);
+    if (ceOffline) {
+        lv_label_set_text(WC_label1, "CE offline");
+        lv_obj_set_style_bg_color(cards[ROOM_WC], lv_color_hex(0x666666), 0); // Gray
+        lv_label_set_text(WC_label2, "");
+    } else {
+        lv_obj_set_style_bg_color(cards[ROOM_WC], lv_color_hex(BTN_WC_COLOR), 0);
+        if (sensorData.fanStates[0]) {
+            uint32_t remaining = sensorData.offTimes[0] - myTZ.now();
+            if (remaining > 0) {
+                lv_label_set_text_fmt(WC_label1, "%d", remaining);
+            } else {
+                lv_label_set_text(WC_label1, "WC");
+            }
         } else {
             lv_label_set_text(WC_label1, "WC");
         }
-    } else {
-        lv_label_set_text(WC_label1, "WC");
+        lv_label_set_text_fmt(WC_label2, "%d hPa", (int)sensorData.bathroomPressure);
     }
-    lv_label_set_text_fmt(WC_label2, "%d hPa", (int)sensorData.bathroomPressure);
 
     // Update UT
-    if (sensorData.fanStates[1]) {
-        uint32_t remaining = sensorData.offTimes[1] - myTZ.now();
-        if (remaining > 0) {
-            lv_label_set_text_fmt(UT_label1, "%d", remaining);
+    if (ceOffline) {
+        lv_label_set_text(UT_label1, "CE offline");
+        lv_obj_set_style_bg_color(cards[ROOM_UT], lv_color_hex(0x666666), 0); // Gray
+        lv_label_set_text(UT_label2, "");
+        lv_label_set_text(UT_label3, "");
+    } else {
+        lv_obj_set_style_bg_color(cards[ROOM_UT], lv_color_hex(BTN_UT_COLOR), 0);
+        if (sensorData.fanStates[1]) {
+            uint32_t remaining = sensorData.offTimes[1] - myTZ.now();
+            if (remaining > 0) {
+                lv_label_set_text_fmt(UT_label1, "%d", remaining);
+            } else {
+                lv_label_set_text(UT_label1, "UT");
+            }
         } else {
             lv_label_set_text(UT_label1, "UT");
         }
-    } else {
-        lv_label_set_text(UT_label1, "UT");
+        lv_label_set_text_fmt(UT_label2, "%.1f°", sensorData.utTemp);
+        lv_label_set_text_fmt(UT_label3, "%.1f%%", sensorData.utHumidity);
     }
-    lv_label_set_text_fmt(UT_label2, "%.1f°", sensorData.utTemp);
-    lv_label_set_text_fmt(UT_label3, "%.1f%%", sensorData.utHumidity);
 
     // Update KOP
-    if (sensorData.fanStates[2]) {
-        uint32_t remaining = sensorData.offTimes[2] - myTZ.now();
-        if (remaining > 0) {
-            lv_label_set_text_fmt(KOP_label1, "%d", remaining);
+    if (ceOffline) {
+        lv_label_set_text(KOP_label1, "CE offline");
+        lv_obj_set_style_bg_color(cards[ROOM_KOP], lv_color_hex(0x666666), 0); // Gray
+        lv_label_set_text(KOP_label2, "");
+        lv_label_set_text(KOP_label3, "");
+    } else {
+        lv_obj_set_style_bg_color(cards[ROOM_KOP], lv_color_hex(BTN_KOP_COLOR), 0);
+        if (sensorData.fanStates[2]) {
+            uint32_t remaining = sensorData.offTimes[2] - myTZ.now();
+            if (remaining > 0) {
+                lv_label_set_text_fmt(KOP_label1, "%d", remaining);
+            } else {
+                lv_label_set_text(KOP_label1, "KOP");
+            }
         } else {
             lv_label_set_text(KOP_label1, "KOP");
         }
-    } else {
-        lv_label_set_text(KOP_label1, "KOP");
+        lv_label_set_text_fmt(KOP_label2, "%.1f°", sensorData.bathroomTemp);
+        lv_label_set_text_fmt(KOP_label3, "%.1f%%", sensorData.bathroomHumidity);
     }
-    lv_label_set_text_fmt(KOP_label2, "%.1f°", sensorData.bathroomTemp);
-    lv_label_set_text_fmt(KOP_label3, "%.1f%%", sensorData.bathroomHumidity);
 
     // Update DS
-    lv_label_set_text_fmt(DS_label2, "%.1f°", sensorData.localTemp);
-    lv_label_set_text_fmt(DS_label3, "%.1f%%", sensorData.localHumidity);
-    lv_label_set_text_fmt(DS_label4, "%d ppm", (int)sensorData.localCO2);
-    lv_label_set_text(DS_label5, "---");
+    if (ceOffline) {
+        lv_label_set_text(DS_label1, "CE offline");
+        lv_obj_set_style_bg_color(cards[ROOM_DS], lv_color_hex(0x666666), 0); // Gray
+        lv_label_set_text(DS_label2, "");
+        lv_label_set_text(DS_label3, "");
+        lv_label_set_text(DS_label4, "");
+        lv_label_set_text(DS_label5, "");
+    } else {
+        lv_obj_set_style_bg_color(cards[ROOM_DS], lv_color_hex(BTN_DS_COLOR), 0);
+        lv_label_set_text(DS_label1, "DS");
+        lv_label_set_text_fmt(DS_label2, "%.1f°", sensorData.localTemp);
+        lv_label_set_text_fmt(DS_label3, "%.1f%%", sensorData.localHumidity);
+        lv_label_set_text_fmt(DS_label4, "%d ppm", (int)sensorData.localCO2);
+        lv_label_set_text(DS_label5, "---");
+    }
 
     // Update light bulb icons (only if SD is available)
     if (!(sensorData.errorFlags[0] & ERR_SD)) {

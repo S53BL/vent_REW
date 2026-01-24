@@ -76,6 +76,7 @@ extern IPAddress subnet;
 extern IPAddress dns;
 extern const char* apSSID;
 extern const char* apPassword;
+#define CEW_IP "192.168.2.192"
 
 // Sensor addresses
 #define SHT41_ADDRESS 0x44

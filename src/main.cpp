@@ -100,6 +100,7 @@ void setup() {
     }
 
     if (wifiConnected) {
+        sendHeartbeat();
         Serial.println("Setting up NTP...");
         setupNTP();
         for (int i = 0; i < NTP_SERVER_COUNT; i++) {
@@ -129,6 +130,7 @@ void setup() {
 void loop() {
     uint32_t now = millis();
 
+    static unsigned long lastHeartbeat = 0;
     static uint32_t lastStatusLog = 0;
     if (now - lastStatusLog > 60000) {
       Serial.printf("Status - millis: %lu, heap: %d\n", now, ESP.getFreeHeap());
@@ -229,7 +231,7 @@ void loop() {
     }
 
     // Heartbeat ping
-    if (now - lastHeartbeat >= HTTP_HEARTBEAT) {
+    if (now - lastHeartbeat >= 300000) {
         sendHeartbeat();
         lastHeartbeat = now;
     }
