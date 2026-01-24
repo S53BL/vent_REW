@@ -100,15 +100,12 @@ void readSensors() {
             } else if (isnan(newHum) || newHum < 0.0f || newHum > 100.0f) {
                 Serial.printf("[SHT41] Invalid humidity: %.2f\n", newHum);
             } else {
-                // Check thresholds
-                if (isnan(sensorData.lastTemp) || fabs(newTemp - sensorData.lastTemp) > TEMP_CHANGE_THRESHOLD ||
-                    isnan(sensorData.lastHumidity) || fabs(newHum - sensorData.lastHumidity) > HUM_CHANGE_THRESHOLD) {
-                    sensorData.localTemp = newTemp;
-                    sensorData.localHumidity = newHum;
-                    sensorData.lastTemp = newTemp;
-                    sensorData.lastHumidity = newHum;
-                    updateUI = true;
-                }
+                // Always update values (no threshold checking)
+                sensorData.localTemp = newTemp;
+                sensorData.localHumidity = newHum;
+                sensorData.lastTemp = newTemp;
+                sensorData.lastHumidity = newHum;
+                updateUI = true;
                 Serial.printf("[Sensor] SHT41 read: temp=%.1f, humidity=%.1f\n", newTemp, newHum);
             }
         }
@@ -131,12 +128,10 @@ void readSensors() {
                 if (isnan(newCO2) || newCO2 < 400.0f || newCO2 > 5000.0f) {
                     Serial.printf("[SCD40] Invalid CO2: %.0f\n", newCO2);
                 } else {
-                    // Check threshold
-                    if (isnan(sensorData.lastCO2) || fabs(newCO2 - sensorData.lastCO2) > CO2_CHANGE_THRESHOLD) {
-                        sensorData.localCO2 = newCO2;
-                        sensorData.lastCO2 = newCO2;
-                        updateUI = true;
-                    }
+                    // Always update values (no threshold checking)
+                    sensorData.localCO2 = newCO2;
+                    sensorData.lastCO2 = newCO2;
+                    updateUI = true;
                     Serial.printf("[Sensor] SCD40 read: CO2=%d\n", co2);
                 }
             } else {

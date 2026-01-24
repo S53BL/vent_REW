@@ -398,27 +398,6 @@ void createRoomCards() {
 
     lv_obj_invalidate(lv_scr_act());
     lv_refr_now(NULL);
-
-    lv_refr_now(NULL); // force layout update before prints
-
-    // Debug prints after flex resolve
-    lv_area_t coords;
-    lv_obj_get_coords(cards[ROOM_EXT], &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_EXT], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_EXT]), lv_obj_get_height(cards[ROOM_EXT]));
-    lv_obj_get_coords(cards[ROOM_TIME_WIFI], &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_TIME_WIFI], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_TIME_WIFI]), lv_obj_get_height(cards[ROOM_TIME_WIFI]));
-    lv_obj_get_coords(cards[ROOM_WC], &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_WC], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_WC]), lv_obj_get_height(cards[ROOM_WC]));
-    lv_obj_get_coords(cards[ROOM_UT], &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_UT], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_UT]), lv_obj_get_height(cards[ROOM_UT]));
-    lv_obj_get_coords(cards[ROOM_KOP], &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_KOP], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_KOP]), lv_obj_get_height(cards[ROOM_KOP]));
-    lv_obj_get_coords(cards[ROOM_DS], &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_DS], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_DS]), lv_obj_get_height(cards[ROOM_DS]));
-    lv_obj_get_coords(cards[ROOM_S], &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_S], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_S]), lv_obj_get_height(cards[ROOM_S]));
-    lv_obj_get_coords(cards[ROOM_B], &coords);
-    Serial.printf("Button %s: abs x=%d y=%d w=%d h=%d\n", roomNames[ROOM_B], coords.x1, coords.y1, lv_obj_get_width(cards[ROOM_B]), lv_obj_get_height(cards[ROOM_B]));
 }
 
 static void button_event_cb(lv_event_t * e) {
