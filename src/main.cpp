@@ -132,6 +132,7 @@ void setup() {
             Serial.println("NTP sync failed");
         }
         Serial.println("NTP setup complete");
+        fetchWeather();
     }
 
     Serial.println("Setting up HTTP server...");
@@ -260,6 +261,12 @@ void loop() {
     if (now - lastHeartbeat >= 300000) {
         sendToCEW("GET", "/api/ping", "");
         lastHeartbeat = now;
+    }
+
+    // Minute update for TIME_WIFI and EXT cards
+    if (myTZ.dateTime("s").toInt() == 0 && now - lastMinuteUpdate >= 60000) {
+        updateTimeWifiAndExtCards();
+        lastMinuteUpdate = now;
     }
 
     // Weather update

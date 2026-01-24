@@ -241,24 +241,31 @@ bool sendHeartbeat() {
 }
 
 void fetchWeather() {
-    if (WiFi.status() != WL_CONNECTED) return;
+    logEvent("Weather:Starting weather fetch");
+    if (WiFi.status() != WL_CONNECTED) {
+        logEvent("Weather:Skipped - WiFi not connected");
+        return;
+    }
 
     HTTPClient http;
-    http.begin("https://api.open-meteo.com/v1/forecast?latitude=46.0569&longitude=14.5058&current=weather_code");
+    logEvent("Weather:Requesting from " + String(METEO_URL));
+    http.begin(METEO_URL);
     int httpResponseCode = http.GET();
+    logEvent("Weather:HTTP response code: " + String(httpResponseCode));
 
     if (httpResponseCode > 0) {
         String payload = http.getString();
         JsonDocument doc;
         deserializeJson(doc, payload);
         int weatherCode = doc["current"]["weather_code"];
+        sensorData.weatherCode = weatherCode;
+        logEvent("Weather:Received weather code: " + String(weatherCode));
 
-        // Map weather code to icon
-        if (weatherCode == 0) sensorData.weatherIcon = "sun.png";
-        else if (weatherCode <= 3) sensorData.weatherIcon = "partly-cloudy.png";
-        // Add more mappings
-        else sensorData.weatherIcon = "cloud.png";
+        // Update weather icon immediately
+        extern void updateWeatherIcon();
+        updateWeatherIcon();
     } else {
+        logEvent("Weather:Failed to fetch weather data");
         sensorData.errorFlags[0] |= ERR_HTTP;
     }
     http.end();

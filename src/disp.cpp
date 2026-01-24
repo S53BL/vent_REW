@@ -178,7 +178,7 @@ void createRoomCards() {
 
     // Weather icon in EXT card
     weather_icon = lv_img_create(cards[ROOM_EXT]);
-    lv_obj_align(weather_icon, LV_ALIGN_BOTTOM_RIGHT, -5, -5);
+    lv_obj_align(weather_icon, LV_ALIGN_TOP_RIGHT, 0, 0);
 
     // TIME_WIFI
     cards[ROOM_TIME_WIFI] = lv_btn_create(lv_scr_act());
@@ -215,9 +215,9 @@ void createRoomCards() {
     lv_label_set_text(TIME_WIFI_label4, "E=0000 Wh");
     lv_obj_align(TIME_WIFI_label4, LV_ALIGN_TOP_LEFT, 5, 45);
 
-    // WiFi icon placeholder
+    // WiFi icon
     wifi_icon = lv_img_create(cards[ROOM_TIME_WIFI]);
-    lv_obj_align(wifi_icon, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
+    lv_obj_align(wifi_icon, LV_ALIGN_TOP_RIGHT, 0, 0);
 
     // WC
     cards[ROOM_WC] = lv_btn_create(lv_scr_act());
@@ -243,7 +243,7 @@ void createRoomCards() {
 
     // WC bulb icon (wcLight=3, index 2)
     bulb_icons[2] = lv_img_create(cards[ROOM_WC]);
-    lv_obj_align(bulb_icons[2], LV_ALIGN_TOP_RIGHT, -10, 10);
+    lv_obj_align(bulb_icons[2], LV_ALIGN_TOP_RIGHT, 0, 0);
     lv_obj_add_flag(bulb_icons[2], LV_OBJ_FLAG_HIDDEN); // Default hidden
 
     // UT
@@ -276,7 +276,7 @@ void createRoomCards() {
 
     // UT bulb icon (utilityLight=1, index 0)
     bulb_icons[0] = lv_img_create(cards[ROOM_UT]);
-    lv_obj_align(bulb_icons[0], LV_ALIGN_TOP_RIGHT, -10, 10);
+    lv_obj_align(bulb_icons[0], LV_ALIGN_TOP_RIGHT, 0, 0);
     lv_obj_add_flag(bulb_icons[0], LV_OBJ_FLAG_HIDDEN); // Default hidden
 
     // KOP
@@ -309,7 +309,7 @@ void createRoomCards() {
 
     // KOP bulb icon (bathroomLight=2, index 1)
     bulb_icons[1] = lv_img_create(cards[ROOM_KOP]);
-    lv_obj_align(bulb_icons[1], LV_ALIGN_TOP_RIGHT, -10, 10);
+    lv_obj_align(bulb_icons[1], LV_ALIGN_TOP_RIGHT, 0, 0);
     lv_obj_add_flag(bulb_icons[1], LV_OBJ_FLAG_HIDDEN); // Default hidden
 
     // DS
@@ -452,7 +452,34 @@ static void button_event_cb(lv_event_t * e) {
 
 void updateUI() {
     updateCards();
-    updateWeatherIcon();
+    updateWiFiIcon();
+}
+
+void updateTimeWifiAndExtCards() {
+    bool ceOffline = sensorData.errorFlags[0] & ERR_HTTP;
+
+    // Update EXT
+    lv_label_set_text_fmt(EXT_label1, "%.1f°", sensorData.extTemp);
+    lv_label_set_text_fmt(EXT_label2, "%.1f%%", sensorData.extHumidity);
+    lv_label_set_text_fmt(EXT_label3, "%d hPa", (int)sensorData.extPressure);
+    lv_label_set_text_fmt(EXT_label4, "%d lx", (int)sensorData.extLux);
+
+    // Update TIME_WIFI
+    if (timeSynced) {
+        lv_label_set_text(TIME_WIFI_label1, myTZ.dateTime("H:i").c_str());
+        lv_label_set_text(TIME_WIFI_label2, myTZ.dateTime("d.m.Y").c_str());
+    } else {
+        lv_label_set_text(TIME_WIFI_label1, "--");
+        lv_label_set_text(TIME_WIFI_label2, "--");
+    }
+    lv_label_set_text_fmt(TIME_WIFI_label3, "P=%.1f W", sensorData.currentPower);
+    if (ceOffline) {
+        lv_label_set_text(TIME_WIFI_label4, "E=0000 Wh (OFF)");
+    } else {
+        lv_label_set_text_fmt(TIME_WIFI_label4, "E=%.1f Wh", sensorData.energyConsumption);
+    }
+
+    // Update WiFi icon
     updateWiFiIcon();
 }
 

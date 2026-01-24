@@ -15,6 +15,7 @@ extern uint32_t lastHeartbeat;
 extern uint32_t lastWeatherUpdate;
 extern uint32_t lastArchive;
 extern uint32_t lastSensorReset;
+extern uint32_t lastMinuteUpdate;
 extern unsigned long lastSEWReceive;
 extern unsigned long lastStatusUpdate;
 extern unsigned long lastSuccessfulHeartbeat;

@@ -14,6 +14,7 @@ uint32_t lastHttpSend = 0;
 uint32_t lastHeartbeat = 0;
 uint32_t lastWeatherUpdate = 0;
 uint32_t lastSensorReset = 0;
+uint32_t lastMinuteUpdate = 0;
 unsigned long lastSEWReceive = 0;
 unsigned long lastStatusUpdate = 0;
 unsigned long lastSuccessfulHeartbeat = 0;

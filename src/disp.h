@@ -23,6 +23,7 @@ bool initDisplay();
 void updateUI();
 void createTabs();
 void updateCards();
+void updateTimeWifiAndExtCards();
 void cycleGraph();
 void updateWeatherIcon();
 
