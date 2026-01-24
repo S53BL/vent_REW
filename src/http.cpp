@@ -30,7 +30,7 @@ bool setupServer() {
                       sensorData.extTemp, sensorData.extHumidity, sensorData.extPressure, sensorData.extVOC, sensorData.extLux);
         lastSEWReceive = millis();
         request->send(200, "application/json", "{\"status\":\"OK\"}");
-        sendToCEW();
+        // sendToCEW() call removed as it's now parameterized
     });
 
     // Heartbeat endpoint
@@ -90,92 +90,60 @@ void handleClient() {
     // Async server handles clients automatically
 }
 
-bool sendWithRetry(String url, String json) {
-  HTTPClient http;
-  http.setTimeout(2000);
-  http.begin(url);
-  int httpResponseCode;
-  if (json != "") {
-    http.addHeader("Content-Type", "application/json");
-    httpResponseCode = http.POST(json);
-  } else {
-    httpResponseCode = http.GET();
-  }
-  if (httpResponseCode == 200) {
-    lastSuccessfulHeartbeat = millis();
-    if (json != "") Serial.println("[HTTP] Send success");
-    else Serial.println("Heartbeat success");
-    http.end();
-    return true;
-  } else {
-    http.end();
-    delay(1000);
-    yield();
-    http.begin(url);
-    if (json != "") {
-      http.addHeader("Content-Type", "application/json");
-      httpResponseCode = http.POST(json);
-    } else {
-      httpResponseCode = http.GET();
-    }
-    if (httpResponseCode == 200) {
-      lastSuccessfulHeartbeat = millis();
-      if (json != "") Serial.println("[HTTP] Send success");
-      else Serial.println("Heartbeat success");
-      http.end();
-      return true;
-    } else {
-      if (json != "") Serial.println("[HTTP] Send failed after retry");
-      else Serial.println("Heartbeat failed after retry");
-      http.end();
-      return false;
-    }
-  }
-}
 
-void sendToCEW() {
-    if (WiFi.status() != WL_CONNECTED) {
-        sensorData.errorFlags[0] |= ERR_HTTP;
-        return;
-    }
-    DynamicJsonDocument doc(512);
-    doc["extTemp"] = sensorData.extTemp;
-    doc["extHumidity"] = sensorData.extHumidity;
-    doc["extPressure"] = sensorData.extPressure;
-    doc["dsTemp"] = sensorData.localTemp;
-    doc["dsHumidity"] = sensorData.localHumidity;
-    doc["dsCO2"] = sensorData.localCO2;
-    doc["extLux"] = sensorData.extLux;
-    String json;
-    serializeJson(doc, json);
-    Serial.printf("[HTTP] Generated: SENSOR_DATA JSON: %s\n", json.c_str());
-    if ((millis() - lastSuccessfulHeartbeat > 300000) || (sensorData.errorFlags[0] & ERR_WIFI)) {
-        Serial.println(" - not sent: CEW offline or WiFi err");
+
+void sendToCEW(String method, String endpoint, String jsonPayload) {
+    if (!connection_ok || WiFi.status() != WL_CONNECTED) {
+        Serial.println("[HTTP] - not sent: connection not ok or WiFi err");
         sensorData.errorFlags[0] |= ERR_HTTP;
         return;
     }
     HTTPClient http;
     http.setTimeout(2000);
-    http.begin("http://192.168.2.192/api/sensor-data");
-    http.addHeader("Content-Type", "application/json");
-    int response = http.POST(json);
-    if (response != 200) {
+    String url = "http://" + String(CEW_IP) + endpoint;
+    if (!http.begin(url)) {
+        Serial.println("[HTTP] begin failed");
+        connection_ok = false;
+        return;
+    }
+    int httpCode;
+    if (method == "POST") {
+        http.addHeader("Content-Type", "application/json");
+        httpCode = http.POST(jsonPayload);
+    } else if (method == "GET") {
+        httpCode = http.GET();
+    } else {
+        Serial.println("[HTTP] invalid method");
+        http.end();
+        return;
+    }
+    if (httpCode == HTTP_CODE_OK) {
+        lastSuccessfulHeartbeat = millis();
+        connection_ok = true;
+        Serial.println("[HTTP] Send success to " + endpoint);
+        sensorData.errorFlags[0] &= ~ERR_HTTP;
+    } else {
+        Serial.printf("[HTTP] Send failed: %d to %s\n", httpCode, endpoint.c_str());
         delay(1000);
         yield();
-        response = http.POST(json);
-        if (response != 200) {
-            Serial.println("[HTTP] Send failed after retry");
+        // 1x retry
+        if (method == "POST") {
+            httpCode = http.POST(jsonPayload);
+        } else {
+            httpCode = http.GET();
+        }
+        if (httpCode == HTTP_CODE_OK) {
+            lastSuccessfulHeartbeat = millis();
+            connection_ok = true;
+            Serial.println("[HTTP] Retry success");
+        } else {
+            Serial.println("[HTTP] Retry failed");
+            connection_ok = false;
             sensorData.errorFlags[0] |= ERR_HTTP;
-            http.end();
-            return;
         }
     }
-    lastSuccessfulHeartbeat = millis();
-    Serial.println("[HTTP] Send success");
-    sensorData.errorFlags[0] &= ~ERR_HTTP;
     http.end();
-    extern void updateUI();
-    updateUI();
+    // Za GET ignoriraj body, samo status code
 }
 
 bool sendHeartbeat() {
@@ -191,10 +159,12 @@ bool sendHeartbeat() {
     if (httpCode == HTTP_CODE_OK) {
         lastSuccessfulHeartbeat = millis();
         sensorData.errorFlags[0] &= ~ERR_HTTP;
+        connection_ok = true;
         Serial.println("[HTTP] Heartbeat success");
         return true;
     } else {
         Serial.printf("[HTTP] Heartbeat failed: %d\n", httpCode);
+        connection_ok = false;
         return false;
     }
 }
@@ -223,27 +193,5 @@ void fetchWeather() {
     http.end();
 }
 
-void sendManualControl(String room, String action) {
-    if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("[HTTP] WiFi not connected - skipping MANUAL_CONTROL");
-        return;
-    }
-    DynamicJsonDocument doc(128);
-    doc["room"] = room;
-    doc["action"] = action;
-    String json;
-    serializeJson(doc, json);
-    Serial.printf("[HTTP] Generated: MANUAL_CONTROL for room %s action %s JSON: %s\n", room.c_str(), action.c_str(), json.c_str());
-    if ((millis() - lastSuccessfulHeartbeat > 300000) || (sensorData.errorFlags[0] & ERR_WIFI)) {
-        Serial.println(" - not sent: CEW offline or WiFi err");
-        sensorData.errorFlags[0] |= ERR_HTTP;
-        return;
-    }
-    String url = "http://192.168.2.192/api/manual-control";
-    bool success = sendWithRetry(url, json);
-    if (success) {
-        Serial.printf("[HTTP] MANUAL_CONTROL sent: room=%s, action=%s\n", room.c_str(), action.c_str());
-    } else {
-        Serial.printf("[HTTP] MANUAL_CONTROL failed: room=%s, action=%s\n", room.c_str(), action.c_str());
-    }
-}
+
+

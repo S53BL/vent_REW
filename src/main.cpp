@@ -178,10 +178,12 @@ void loop() {
     if (now - lastWiFiCheck > WIFI_CHECK_INTERVAL) {
         lastWiFiCheck = now;
         if (WiFi.status() != WL_CONNECTED) {
+            connection_ok = false;
             Serial.println("WiFi disconnected, attempting reconnect");
             for (int attempt = 0; attempt < WIFI_RETRY_COUNT; attempt++) {
                 if (setupWiFi()) {
                     sensorData.errorFlags[0] &= ~ERR_WIFI;
+                    connection_ok = true;
                     break;
                 }
                 delay(WIFI_FIXED_DELAY);
@@ -207,16 +209,17 @@ void loop() {
 
     // Periodic HTTP send to CEW
     if (now - lastHttpSend >= HTTP_SEND_INTERVAL) {
-        JsonDocument doc;
-        doc["localTemp"] = sensorData.localTemp;
-        doc["localHumidity"] = sensorData.localHumidity;
-        doc["localCO2"] = sensorData.localCO2;
+        DynamicJsonDocument doc(512);
         doc["extTemp"] = sensorData.extTemp;
-        // Add other fields
-
-        String jsonString;
-        serializeJson(doc, jsonString);
-        sendWithRetry("http://192.168.2.192/api/sensor-data", jsonString);
+        doc["extHumidity"] = sensorData.extHumidity;
+        doc["extPressure"] = sensorData.extPressure;
+        doc["dsTemp"] = sensorData.localTemp;
+        doc["dsHumidity"] = sensorData.localHumidity;
+        doc["dsCO2"] = sensorData.localCO2;
+        doc["extLux"] = sensorData.extLux;
+        String json;
+        serializeJson(doc, json);
+        sendToCEW("POST", "/api/sensor-data", json);
         lastHttpSend = now;
     }
 
@@ -232,7 +235,7 @@ void loop() {
 
     // Heartbeat ping
     if (now - lastHeartbeat >= 300000) {
-        sendHeartbeat();
+        sendToCEW("GET", "/api/ping", "");
         lastHeartbeat = now;
     }
 

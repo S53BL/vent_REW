@@ -7,10 +7,8 @@
 // Function declarations
 bool setupServer();
 void handleClient();
-void sendToCEW();
+void sendToCEW(String method, String endpoint, String jsonPayload);
 bool sendHeartbeat();
-bool sendWithRetry(String url, String json);
 void fetchWeather();
-void sendManualControl(String room, String action);
 
 #endif // HTTP_H

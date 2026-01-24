@@ -6,6 +6,7 @@
 #include <Touch_CST328.h>
 #include <LVGL_Driver.h>
 #include <WiFi.h>
+#include <ArduinoJson.h>
 
 // WiFi icons (16x16 px, placeholders - replace with actual PNG converted data)
 const uint8_t green_wifi_bin[] = { /* TODO: Replace with actual green WiFi icon bin data */ };
@@ -440,7 +441,12 @@ static void button_event_cb(lv_event_t * e) {
         // Perform short action (e.g., turn on fan)
         if (roomId >= ROOM_WC && roomId <= ROOM_DS) {
             String roomStr = (roomId == ROOM_WC) ? "wc" : (roomId == ROOM_UT) ? "ut" : (roomId == ROOM_KOP) ? "kop" : "ds";
-            sendManualControl(roomStr, "manual");
+            String json;
+            DynamicJsonDocument doc(128);
+            doc["room"] = roomStr;
+            doc["action"] = "manual";
+            serializeJson(doc, json);
+            sendToCEW("POST", "/api/manual-control", json);
         }
         lv_anim_del(btn, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_t a;
@@ -456,7 +462,12 @@ static void button_event_cb(lv_event_t * e) {
         // Perform long action (e.g., disable fan)
         if (roomId >= ROOM_WC && roomId <= ROOM_DS) {
             String roomStr = (roomId == ROOM_WC) ? "wc" : (roomId == ROOM_UT) ? "ut" : (roomId == ROOM_KOP) ? "kop" : "ds";
-            sendManualControl(roomStr, "toggle");
+            String json;
+            DynamicJsonDocument doc(128);
+            doc["room"] = roomStr;
+            doc["action"] = "toggle";
+            serializeJson(doc, json);
+            sendToCEW("POST", "/api/manual-control", json);
         }
         lv_anim_del(btn, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_zoom);
         lv_anim_t a;
