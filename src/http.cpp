@@ -93,6 +93,8 @@ void handleClient() {
 
 
 void sendToCEW(String method, String endpoint, String jsonPayload) {
+    Serial.printf("[JSON] %s: %s\n", endpoint.c_str(), jsonPayload.c_str());
+
     if (!connection_ok || WiFi.status() != WL_CONNECTED) {
         Serial.println("[HTTP] - not sent: connection not ok or WiFi err");
         sensorData.errorFlags[0] |= ERR_HTTP;
@@ -100,6 +102,7 @@ void sendToCEW(String method, String endpoint, String jsonPayload) {
     }
     HTTPClient http;
     http.setTimeout(2000);
+    http.setConnectTimeout(2000);  // Set connection timeout to 2000ms
     String url = "http://" + String(CEW_IP) + endpoint;
     if (!http.begin(url)) {
         Serial.println("[HTTP] begin failed");
@@ -120,7 +123,7 @@ void sendToCEW(String method, String endpoint, String jsonPayload) {
     if (httpCode == HTTP_CODE_OK) {
         lastSuccessfulHeartbeat = millis();
         connection_ok = true;
-        Serial.println("[HTTP] Send success to " + endpoint);
+        Serial.println("[HTTP] sent OK");
         sensorData.errorFlags[0] &= ~ERR_HTTP;
     } else {
         Serial.printf("[HTTP] Send failed: %d to %s\n", httpCode, endpoint.c_str());
@@ -135,9 +138,9 @@ void sendToCEW(String method, String endpoint, String jsonPayload) {
         if (httpCode == HTTP_CODE_OK) {
             lastSuccessfulHeartbeat = millis();
             connection_ok = true;
-            Serial.println("[HTTP] Retry success");
+            Serial.println("[HTTP] sent OK (retry)");
         } else {
-            Serial.println("[HTTP] Retry failed");
+            Serial.println("[HTTP] not sent: CEW offline");
             connection_ok = false;
             sensorData.errorFlags[0] |= ERR_HTTP;
         }
@@ -149,6 +152,7 @@ void sendToCEW(String method, String endpoint, String jsonPayload) {
 bool sendHeartbeat() {
     HTTPClient http;
     http.setTimeout(2000);
+    http.setConnectTimeout(2000);  // Set connection timeout to 2000ms
     String url = "http://" + String(CEW_IP) + "/api/ping";
     if (!http.begin(url)) {
         Serial.println("[HTTP] Heartbeat begin failed");
