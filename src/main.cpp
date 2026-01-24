@@ -180,7 +180,6 @@ void loop() {
     // Periodic sensor reading
     if (now - lastSensorRead >= SENSOR_READ_INTERVAL) {
         readSensors();
-        // saveHistory(); // removed old function
         lastSensorRead = now;
     }
 
@@ -192,7 +191,7 @@ void loop() {
 
     // Periodic sensor reset if error
     if ((sensorData.errorFlags[0] & ERR_SENSOR) && now - lastSensorReset >= 60000) {
-        logEvent("Main:Resetting sensors due to error");
+        logEvent("Main:Resett sensors due to error");
         resetSensors();
         lastSensorReset = now;
     }
@@ -267,12 +266,6 @@ void loop() {
     if (now - lastWeatherUpdate >= WEATHER_UPDATE_INTERVAL) {
         fetchWeather();
         lastWeatherUpdate = now;
-    }
-
-    // Archive data at 00:05
-    if (now - lastArchive >= 60000) {  // Check every minute
-        // archiveData(); // removed old function
-        lastArchive = now;
     }
 
     // Handle HTTP clients
