@@ -91,32 +91,43 @@ void handleClient() {
 }
 
 bool sendWithRetry(String url, String json) {
-  for (int i = 0; i < 3; i++) {
-    HTTPClient http;
-    http.begin(url);
-    int httpResponseCode;
+  HTTPClient http;
+  http.setTimeout(2000);
+  http.begin(url);
+  int httpResponseCode;
+  if (json != "") {
+    http.addHeader("Content-Type", "application/json");
+    httpResponseCode = http.POST(json);
+  } else {
+    httpResponseCode = http.GET();
+  }
+  if (httpResponseCode == 200) {
+    lastSuccessfulHeartbeat = millis();
+    if (json != "") Serial.println("[HTTP] Send success");
+    else Serial.println("Heartbeat success");
+    http.end();
+    return true;
+  } else {
+    delay(1000);
+    yield();
     if (json != "") {
-      http.addHeader("Content-Type", "application/json");
       httpResponseCode = http.POST(json);
     } else {
       httpResponseCode = http.GET();
     }
-    http.end();
     if (httpResponseCode == 200) {
-      if (json != "") Serial.println("HTTP success to CEW");
+      lastSuccessfulHeartbeat = millis();
+      if (json != "") Serial.println("[HTTP] Send success");
       else Serial.println("Heartbeat success");
+      http.end();
       return true;
     } else {
-      if (i == 0) {
-        if (json != "") Serial.printf("HTTP error to CEW: %d\n", httpResponseCode);
-        else Serial.printf("Heartbeat error: %d\n", httpResponseCode);
-      }
-      if (i < 2) {
-        delay((1UL << i) * 1000); // 1s, 2s, 4s
-      }
+      if (json != "") Serial.println("[HTTP] Send failed after retry");
+      else Serial.println("Heartbeat failed after retry");
+      http.end();
+      return false;
     }
   }
-  return false;
 }
 
 void sendToCEW() {
@@ -219,6 +230,12 @@ void sendManualControl(String room, String action) {
     doc["action"] = action;
     String json;
     serializeJson(doc, json);
+    Serial.printf("[HTTP] Generated: MANUAL_CONTROL for room %s action %s JSON: %s\n", room.c_str(), action.c_str(), json.c_str());
+    if ((millis() - lastSuccessfulHeartbeat > 300000) || (sensorData.errorFlags[0] & ERR_WIFI)) {
+        Serial.println(" - not sent: CEW offline or WiFi err");
+        sensorData.errorFlags[0] |= ERR_HTTP;
+        return;
+    }
     String url = "http://192.168.2.192/api/manual-control";
     bool success = sendWithRetry(url, json);
     if (success) {
