@@ -107,7 +107,10 @@ void flushLogs() {
 
 String readFile(const char* path) {
     File f = SD_MMC.open(path, FILE_READ);
-    if (!f) return "";
+    if (!f) {
+        logEvent("SD: File open failed " + String(path));
+        return "";
+    }
     String s;
     while (f.available()) s += (char)f.read();
     f.close();

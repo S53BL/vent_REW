@@ -107,6 +107,8 @@ void setupWebEndpoints() {
       return;
     }
 
+    Serial.printf("WEB: Starting logs request, free heap: %u\n", ESP.getFreeHeap());
+
     // Parse parameters with defaults
     String dateStr = request->arg("date");
     String timeStr = request->arg("time");
@@ -153,32 +155,44 @@ void setupWebEndpoints() {
     uint32_t today = myTZ.now();
     String logFiles = listLogFiles(sevenDaysAgo, today);
 
-    // Parse log entries
-    struct LogEntry {
-      uint32_t unix_time;
-      String unit;
-      String message;
-    };
+    // Use PSRAM for large strings if available
+    String tableHtml = "";
+    if (ESP.getPsramSize() > 0) {
+      tableHtml.reserve(5000); // Reduced from 10000 to prevent low heap
+      Serial.printf("WEB: Using PSRAM, size: %u\n", ESP.getPsramSize());
+    }
 
-    std::vector<LogEntry> entries;
+    tableHtml += "<div class=\"scrollable\"><table><thead><tr><th>Čas (lokalni)</th><th>Enota</th><th>Sporočilo</th></tr></thead><tbody>";
 
-    // Split file list and read each file
+    int count = 0;
+
+    // Split file list and read each file (stream processing)
     int fileStart = 0;
-    while (fileStart < logFiles.length()) {
+    while (fileStart < logFiles.length() && count < MAX_ROWS) {
       int commaPos = logFiles.indexOf(',', fileStart);
       String fileName = (commaPos == -1) ? logFiles.substring(fileStart) : logFiles.substring(fileStart, commaPos);
 
       if (fileName.length() > 0) {
-        String fileContent = readFile(fileName.c_str());
-        if (fileContent.length() > 0) {
-          // Parse lines
-          int lineStart = 0;
-          while (lineStart < fileContent.length()) {
-            int lineEnd = fileContent.indexOf('\n', lineStart);
-            if (lineEnd == -1) lineEnd = fileContent.length();
+        File f = SD_MMC.open(fileName.c_str(), FILE_READ);
+        if (f) {
+          while (f.available() && count < MAX_ROWS) {
+            // Safe readStringUntil with timeout/loop to prevent hangs
+            String line = "";
+            int charCount = 0;
+            while (f.available() && charCount < 1024) {
+              char c = f.read();
+              if (c == '\n') break;
+              line += c;
+              charCount++;
+            }
+            if (charCount >= 1024) {
+              Serial.println("WEB: Line too long, skipping");
+              continue; // Skip overly long lines
+            }
+            if (!f.available() && line.length() == 0) break; // No more data
 
-            String line = fileContent.substring(lineStart, lineEnd);
             line.trim();
+            Serial.print(".");
 
             if (line.length() > 0) {
               // Parse unix|unit|message
@@ -192,61 +206,42 @@ void setupWebEndpoints() {
 
                 uint32_t unix_time = unixStr.toInt();
                 if (unix_time >= from_unix && unix_time <= to_unix) {
-                  LogEntry entry;
-                  entry.unix_time = unix_time;
-                  entry.unit = unitStr;
-                  entry.message = msgStr;
-                  entries.push_back(entry);
+                  // Determine row class based on message content
+                  String rowClass = "row-c"; // default green
+                  if (msgStr.indexOf("ERR") >= 0 || msgStr.indexOf("failed") >= 0) {
+                    rowClass = "row-r"; // red for errors
+                  }
+
+                  String localTime = myTZ.dateTime(unix_time, "H:i:s d.m.y");
+                  tableHtml += "<tr class=\"" + rowClass + "\"><td>" + localTime + "</td><td>" + unitStr + "</td><td>" + msgStr + "</td></tr>";
+                  count++;
                 }
               }
             }
-
-            lineStart = lineEnd + 1;
           }
+          f.close();
+        } else {
+          Serial.printf("WEB: Failed to open file: %s\n", fileName.c_str());
         }
       }
 
       fileStart = (commaPos == -1) ? logFiles.length() : commaPos + 1;
     }
 
-    // Sort entries by unix_time descending
-    for (size_t i = 0; i < entries.size(); i++) {
-      for (size_t j = i + 1; j < entries.size(); j++) {
-        if (entries[j].unix_time > entries[i].unix_time) {
-          LogEntry temp = entries[i];
-          entries[i] = entries[j];
-          entries[j] = temp;
-        }
-      }
-    }
-
-    // Build HTML table
-    String tableHtml = "<div class=\"scrollable\"><table><thead><tr><th>Čas (lokalni)</th><th>Enota</th><th>Sporočilo</th></tr></thead><tbody>";
-
-    int maxEntries = entries.size() > MAX_ROWS ? MAX_ROWS : entries.size();
-
-    for (int i = 0; i < maxEntries; i++) {
-      LogEntry entry = entries[i];
-
-      // Determine row class based on message content
-      String rowClass = "row-c"; // default green
-      if (entry.message.indexOf("ERR") >= 0 || entry.message.indexOf("failed") >= 0) {
-        rowClass = "row-r"; // red for errors
-      }
-
-      String localTime = myTZ.dateTime(entry.unix_time, "H:i:s d.m.y");
-      tableHtml += "<tr class=\"" + rowClass + "\"><td>" + localTime + "</td><td>" + entry.unit + "</td><td>" + entry.message + "</td></tr>";
-    }
-
     tableHtml += "</tbody></table></div>";
 
-    if (entries.size() == 0) {
+    if (count == 0) {
       tableHtml = "<p>Ni podatkov za izbrano obdobje.</p>";
-    } else if (entries.size() > MAX_ROWS) {
+    } else if (count >= MAX_ROWS) {
       tableHtml += "<div class=\"warning\">Prikaz omejen na " + String(MAX_ROWS) + " vrstic; za polne podatke uporabi izvoz.</div>";
     }
 
-    logEvent("WEB: Request /logs for " + dateStr + " " + timeStr + ", found " + String(entries.size()) + " entries");
+    Serial.printf("WEB: Finished, rows: %d, heap: %u\n", count, ESP.getFreeHeap());
+    if (ESP.getPsramSize() > 0) {
+      Serial.printf("WEB: PSRAM free: %u\n", ESP.getFreePsram());
+    }
+
+    logEvent("WEB: Logs request - rows processed: " + String(count));
 
     // Send response
     char htmlBuffer[8192];
@@ -287,172 +282,135 @@ void setupWebEndpoints() {
       toDate = y * 10000 + m * 100 + d;
     }
 
-    // Collect data based on type
-    String tableHtml = "";
+    // Use PSRAM for large strings if available
+    String table_html_sens = "";
+    String table_html_vent = "";
+    int count = 0;
+    bool limit_reached = false;
+
+    if (ESP.getPsramSize() > 0) {
+      table_html_sens.reserve(10000);
+      table_html_vent.reserve(10000);
+    }
 
     if (typeStr == "sens" || typeStr == "all") {
-      // Sensor data
+      // Sensor data - stream processing
       String sensFiles = listFiles("history_sens_", fromDate, toDate);
-      std::vector<std::vector<String>> sensRows;
 
-      // Parse sensor CSV files
-      int fileStart = 0;
-      while (fileStart < sensFiles.length()) {
-        int commaPos = sensFiles.indexOf(',', fileStart);
-        String fileName = (commaPos == -1) ? sensFiles.substring(fileStart) : sensFiles.substring(fileStart, commaPos);
+      if (sensFiles.length() > 0) {
+        table_html_sens += "<table><thead><tr><th>Čas</th><th>Ext Temp</th><th>Ext Hum</th><th>Ext Pres</th><th>Ext Lux</th><th>DS Temp</th><th>DS Hum</th><th>DS CO2</th><th>Kop Temp</th><th>Kop Hum</th><th>Kop Pres</th><th>Ut Temp</th><th>Ut Hum</th><th>Wc Pres</th><th>Rezerva</th></tr></thead><tbody>";
 
-        if (fileName.length() > 0) {
-          String fileContent = readFile(fileName.c_str());
-          if (fileContent.length() > 0) {
-            // Parse CSV lines (skip header)
-            int lineStart = fileContent.indexOf('\n') + 1; // Skip header
-            while (lineStart < fileContent.length()) {
-              int lineEnd = fileContent.indexOf('\n', lineStart);
-              if (lineEnd == -1) lineEnd = fileContent.length();
+        int fileStart = 0;
+        while (fileStart < sensFiles.length() && count < MAX_ROWS) {
+          int commaPos = sensFiles.indexOf(',', fileStart);
+          String fileName = (commaPos == -1) ? sensFiles.substring(fileStart) : sensFiles.substring(fileStart, commaPos);
 
-              String line = fileContent.substring(lineStart, lineEnd);
-              line.trim();
+          if (fileName.length() > 0) {
+            File f = SD_MMC.open(fileName.c_str(), FILE_READ);
+            if (f) {
+              // Skip header
+              f.readStringUntil('\n');
 
-              if (line.length() > 0) {
-                std::vector<String> row;
-                int colStart = 0;
-                while (colStart < line.length()) {
-                  int commaPos = line.indexOf(',', colStart);
-                  String col = (commaPos == -1) ? line.substring(colStart) : line.substring(colStart, commaPos);
-                  row.push_back(col);
-                  colStart = (commaPos == -1) ? line.length() : commaPos + 1;
-                }
-                if (row.size() >= 15) { // Ensure we have all columns
-                  sensRows.push_back(row);
+              while (f.available() && count < MAX_ROWS) {
+                String line = f.readStringUntil('\n');
+                line.trim();
+
+                if (line.length() > 0) {
+                  table_html_sens += "<tr>";
+                  int col = 0;
+                  int start = 0;
+                  while (start < line.length() && col < 15) {
+                    int comma = line.indexOf(',', start);
+                    String field = (comma == -1) ? line.substring(start) : line.substring(start, comma);
+                    table_html_sens += "<td>" + field + "</td>";
+                    start = (comma == -1) ? line.length() : comma + 1;
+                    col++;
+                  }
+                  table_html_sens += "</tr>";
+                  count++;
                 }
               }
-
-              lineStart = lineEnd + 1;
+              f.close();
             }
           }
+
+          fileStart = (commaPos == -1) ? sensFiles.length() : commaPos + 1;
         }
 
-        fileStart = (commaPos == -1) ? sensFiles.length() : commaPos + 1;
-      }
-
-      // Sort sensor rows by time (column 0)
-      for (size_t i = 0; i < sensRows.size(); i++) {
-        for (size_t j = i + 1; j < sensRows.size(); j++) {
-          if (sensRows[j][0] < sensRows[i][0]) {
-            std::vector<String> temp = sensRows[i];
-            sensRows[i] = sensRows[j];
-            sensRows[j] = temp;
-          }
-        }
-      }
-
-      // Build sensor table
-      if (sensRows.size() > 0) {
-        if (typeStr == "all") {
-          tableHtml += "<div class=\"table-title\">Senzorji</div>";
-        }
-        tableHtml += "<table><thead><tr><th>Čas</th><th>Ext Temp</th><th>Ext Hum</th><th>Ext Pres</th><th>Ext Lux</th><th>DS Temp</th><th>DS Hum</th><th>DS CO2</th><th>Kop Temp</th><th>Kop Hum</th><th>Kop Pres</th><th>Ut Temp</th><th>Ut Hum</th><th>Wc Pres</th><th>Rezerva</th></tr></thead><tbody>";
-
-        int maxRows = sensRows.size() > MAX_ROWS ? MAX_ROWS : sensRows.size();
-        for (int i = 0; i < maxRows; i++) {
-          tableHtml += "<tr>";
-          for (int j = 0; j < 15; j++) {
-            tableHtml += "<td>" + sensRows[i][j] + "</td>";
-          }
-          tableHtml += "</tr>";
-        }
-        tableHtml += "</tbody></table>";
-
-        if (sensRows.size() > MAX_ROWS) {
-          tableHtml += "<div class=\"warning\">Prikaz omejen na " + String(MAX_ROWS) + " vrstic; za polne podatke uporabi izvoz.</div>";
-        }
+        table_html_sens += "</tbody></table>";
       }
     }
 
     if (typeStr == "vent" || typeStr == "all") {
-      // Fan data
+      // Fan data - stream processing
       String fanFiles = listFiles("fan_history_", fromDate, toDate);
-      std::vector<std::vector<String>> fanRows;
 
-      // Parse fan CSV files
-      int fileStart = 0;
-      while (fileStart < fanFiles.length()) {
-        int commaPos = fanFiles.indexOf(',', fileStart);
-        String fileName = (commaPos == -1) ? fanFiles.substring(fileStart) : fanFiles.substring(fileStart, commaPos);
+      if (fanFiles.length() > 0) {
+        table_html_vent += "<table><thead><tr><th>Čas</th><th>Kop Fan</th><th>Ut Fan</th><th>Wc Fan</th><th>Common Intake</th></tr></thead><tbody>";
 
-        if (fileName.length() > 0) {
-          String fileContent = readFile(fileName.c_str());
-          if (fileContent.length() > 0) {
-            // Parse CSV lines (skip header)
-            int lineStart = fileContent.indexOf('\n') + 1; // Skip header
-            while (lineStart < fileContent.length()) {
-              int lineEnd = fileContent.indexOf('\n', lineStart);
-              if (lineEnd == -1) lineEnd = fileContent.length();
+        int fileStart = 0;
+        while (fileStart < fanFiles.length() && count < MAX_ROWS) {
+          int commaPos = fanFiles.indexOf(',', fileStart);
+          String fileName = (commaPos == -1) ? fanFiles.substring(fileStart) : fanFiles.substring(fileStart, commaPos);
 
-              String line = fileContent.substring(lineStart, lineEnd);
-              line.trim();
+          if (fileName.length() > 0) {
+            File f = SD_MMC.open(fileName.c_str(), FILE_READ);
+            if (f) {
+              // Skip header
+              f.readStringUntil('\n');
 
-              if (line.length() > 0) {
-                std::vector<String> row;
-                int colStart = 0;
-                while (colStart < line.length()) {
-                  int commaPos = line.indexOf(',', colStart);
-                  String col = (commaPos == -1) ? line.substring(colStart) : line.substring(colStart, commaPos);
-                  row.push_back(col);
-                  colStart = (commaPos == -1) ? line.length() : commaPos + 1;
-                }
-                if (row.size() >= 5) { // Ensure we have all columns
-                  fanRows.push_back(row);
+              while (f.available() && count < MAX_ROWS) {
+                String line = f.readStringUntil('\n');
+                line.trim();
+
+                if (line.length() > 0) {
+                  table_html_vent += "<tr>";
+                  int col = 0;
+                  int start = 0;
+                  while (start < line.length() && col < 5) {
+                    int comma = line.indexOf(',', start);
+                    String field = (comma == -1) ? line.substring(start) : line.substring(start, comma);
+                    table_html_vent += "<td>" + field + "</td>";
+                    start = (comma == -1) ? line.length() : comma + 1;
+                    col++;
+                  }
+                  table_html_vent += "</tr>";
+                  count++;
                 }
               }
-
-              lineStart = lineEnd + 1;
+              f.close();
             }
           }
+
+          fileStart = (commaPos == -1) ? fanFiles.length() : commaPos + 1;
         }
 
-        fileStart = (commaPos == -1) ? fanFiles.length() : commaPos + 1;
+        table_html_vent += "</tbody></table>";
       }
+    }
 
-      // Sort fan rows by time (column 0)
-      for (size_t i = 0; i < fanRows.size(); i++) {
-        for (size_t j = i + 1; j < fanRows.size(); j++) {
-          if (fanRows[j][0] < fanRows[i][0]) {
-            std::vector<String> temp = fanRows[i];
-            fanRows[i] = fanRows[j];
-            fanRows[j] = temp;
-          }
-        }
+    // Build final tableHtml
+    String tableHtml = "";
+    if (typeStr == "all") {
+      if (table_html_sens.length() > 0) {
+        tableHtml += "<div class=\"table-title\">Senzorji</div>" + table_html_sens;
       }
-
-      // Build fan table
-      if (fanRows.size() > 0) {
-        if (typeStr == "all") {
-          tableHtml += "<div class=\"table-title\">Ventilatorji</div>";
-        }
-        tableHtml += "<table><thead><tr><th>Čas</th><th>Kop Fan</th><th>Ut Fan</th><th>Wc Fan</th><th>Common Intake</th></tr></thead><tbody>";
-
-        int maxRows = fanRows.size() > MAX_ROWS ? MAX_ROWS : fanRows.size();
-        for (int i = 0; i < maxRows; i++) {
-          tableHtml += "<tr>";
-          for (int j = 0; j < 5; j++) {
-            tableHtml += "<td>" + fanRows[i][j] + "</td>";
-          }
-          tableHtml += "</tr>";
-        }
-        tableHtml += "</tbody></table>";
-
-        if (fanRows.size() > MAX_ROWS) {
-          tableHtml += "<div class=\"warning\">Prikaz omejen na " + String(MAX_ROWS) + " vrstic; za polne podatke uporabi izvoz.</div>";
-        }
+      if (table_html_vent.length() > 0) {
+        tableHtml += "<div class=\"table-title\">Ventilatorji</div>" + table_html_vent;
       }
+    } else if (typeStr == "sens") {
+      tableHtml = table_html_sens;
+    } else if (typeStr == "vent") {
+      tableHtml = table_html_vent;
     }
 
     if (tableHtml.length() == 0) {
       tableHtml = "<p>Ni podatkov za izbrano obdobje.</p>";
+    } else if (count >= MAX_ROWS) {
+      tableHtml += "<div class=\"warning\">Prikaz omejen na " + String(MAX_ROWS) + " vrstic; za polne podatke uporabi izvoz.</div>";
     }
 
-    logEvent("WEB: Request /history from " + fromStr + " to " + toStr + " type " + typeStr);
+    logEvent("WEB: History request - rows processed: " + String(count));
 
     // Send response
     char htmlBuffer[16384];
@@ -642,31 +600,25 @@ void setupWebEndpoints() {
     uint32_t today = myTZ.now();
     String logFiles = listLogFiles(sevenDaysAgo, today);
 
-    // Parse log entries
-    struct LogEntry {
-      uint32_t unix_time;
-      String unit;
-      String message;
-    };
+    // Use PSRAM for large strings if available
+    String csvContent = "Čas (lokalni),Unix čas,Enota,Sporočilo\n";
+    if (ESP.getPsramSize() > 0) {
+      csvContent.reserve(10000);
+    }
 
-    std::vector<LogEntry> entries;
+    int count = 0;
 
-    // Split file list and read each file
+    // Split file list and read each file (stream processing)
     int fileStart = 0;
     while (fileStart < logFiles.length()) {
       int commaPos = logFiles.indexOf(',', fileStart);
       String fileName = (commaPos == -1) ? logFiles.substring(fileStart) : logFiles.substring(fileStart, commaPos);
 
       if (fileName.length() > 0) {
-        String fileContent = readFile(fileName.c_str());
-        if (fileContent.length() > 0) {
-          // Parse lines
-          int lineStart = 0;
-          while (lineStart < fileContent.length()) {
-            int lineEnd = fileContent.indexOf('\n', lineStart);
-            if (lineEnd == -1) lineEnd = fileContent.length();
-
-            String line = fileContent.substring(lineStart, lineEnd);
+        File f = SD_MMC.open(fileName.c_str(), FILE_READ);
+        if (f) {
+          while (f.available()) {
+            String line = f.readStringUntil('\n');
             line.trim();
 
             if (line.length() > 0) {
@@ -681,49 +633,26 @@ void setupWebEndpoints() {
 
                 uint32_t unix_time = unixStr.toInt();
                 if (unix_time >= from_unix && unix_time <= to_unix) {
-                  LogEntry entry;
-                  entry.unix_time = unix_time;
-                  entry.unit = unitStr;
-                  entry.message = msgStr;
-                  entries.push_back(entry);
+                  String localTime = myTZ.dateTime(unix_time, "H:i:s d.m.y");
+                  csvContent += localTime + "," + String(unix_time) + "," + unitStr + "," + msgStr + "\n";
+                  count++;
                 }
               }
             }
-
-            lineStart = lineEnd + 1;
           }
+          f.close();
         }
       }
 
       fileStart = (commaPos == -1) ? logFiles.length() : commaPos + 1;
     }
 
-    if (entries.size() == 0) {
+    if (count == 0) {
       request->send(404, "text/plain", "Ni podatkov za izbrano obdobje");
       return;
     }
 
-    // Sort entries by unix_time descending
-    for (size_t i = 0; i < entries.size(); i++) {
-      for (size_t j = i + 1; j < entries.size(); j++) {
-        if (entries[j].unix_time > entries[i].unix_time) {
-          LogEntry temp = entries[i];
-          entries[i] = entries[j];
-          entries[j] = temp;
-        }
-      }
-    }
-
-    // Build CSV content
-    String csvContent = "Čas (lokalni),Unix čas,Enota,Sporočilo\n";
-
-    for (size_t i = 0; i < entries.size(); i++) {
-      LogEntry entry = entries[i];
-      String localTime = myTZ.dateTime(entry.unix_time, "H:i:s d.m.y");
-      csvContent += localTime + "," + String(entry.unix_time) + "," + entry.unit + "," + entry.message + "\n";
-    }
-
-    logEvent("WEB: Export /logs for " + dateStr + " " + timeStr + ", " + String(entries.size()) + " entries");
+    logEvent("WEB: Export /logs for " + dateStr + " " + timeStr + ", " + String(count) + " entries");
 
     // Send CSV response
     AsyncWebServerResponse *response = request->beginResponse(200, "text/csv", csvContent);
