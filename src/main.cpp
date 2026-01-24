@@ -140,6 +140,7 @@ void setup() {
         Serial.println("HTTP server init failed");
     } else {
         Serial.println("HTTP server initialized");
+        Serial.println("WEB: Server setup complete, listening");
     }
 
     logEvent("Setup:Loading settings");
