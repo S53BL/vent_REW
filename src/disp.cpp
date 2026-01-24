@@ -510,7 +510,7 @@ void updateCards() {
     } else {
         lv_obj_set_style_bg_color(cards[ROOM_WC], lv_color_hex(BTN_WC_COLOR), 0);
         if (sensorData.fanStates[0]) {
-            uint32_t remaining = sensorData.offTimes[0] - myTZ.now();
+            uint32_t remaining = ceOffline ? 0 : (sensorData.offTimes[0] - myTZ.now());
             if (remaining > 0) {
                 lv_label_set_text_fmt(WC_label1, "%d", remaining);
             } else {
@@ -531,7 +531,7 @@ void updateCards() {
     } else {
         lv_obj_set_style_bg_color(cards[ROOM_UT], lv_color_hex(BTN_UT_COLOR), 0);
         if (sensorData.fanStates[1]) {
-            uint32_t remaining = sensorData.offTimes[1] - myTZ.now();
+            uint32_t remaining = ceOffline ? 0 : (sensorData.offTimes[1] - myTZ.now());
             if (remaining > 0) {
                 lv_label_set_text_fmt(UT_label1, "%d", remaining);
             } else {
@@ -553,7 +553,7 @@ void updateCards() {
     } else {
         lv_obj_set_style_bg_color(cards[ROOM_KOP], lv_color_hex(BTN_KOP_COLOR), 0);
         if (sensorData.fanStates[2]) {
-            uint32_t remaining = sensorData.offTimes[2] - myTZ.now();
+            uint32_t remaining = ceOffline ? 0 : (sensorData.offTimes[2] - myTZ.now());
             if (remaining > 0) {
                 lv_label_set_text_fmt(KOP_label1, "%d", remaining);
             } else {

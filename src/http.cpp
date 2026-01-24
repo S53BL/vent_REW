@@ -108,9 +108,12 @@ bool sendWithRetry(String url, String json) {
     http.end();
     return true;
   } else {
+    http.end();
     delay(1000);
     yield();
+    http.begin(url);
     if (json != "") {
+      http.addHeader("Content-Type", "application/json");
       httpResponseCode = http.POST(json);
     } else {
       httpResponseCode = http.GET();
