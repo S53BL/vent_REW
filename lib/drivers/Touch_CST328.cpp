@@ -134,7 +134,7 @@ uint8_t Touch_Get_XY(uint16_t *x, uint16_t *y, uint16_t *strength, uint8_t *poin
   assert(y != NULL);
   assert(point_num != NULL);
   assert(max_point_num > 0);
-  
+
   noInterrupts();
   /* Count of points */
   if(touch_data.points > max_point_num)

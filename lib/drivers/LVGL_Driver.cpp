@@ -48,8 +48,9 @@ void Lvgl_Touchpad_Read( lv_indev_drv_t * indev_drv, lv_indev_data_t * data )
   uint16_t strength[5]   = {0};
   uint8_t touchpad_cnt = 0;
   Touch_Read_Data();
-  uint8_t touchpad_pressed = Touch_Get_XY(touchpad_x, touchpad_y, strength, &touchpad_cnt, CST328_LCD_TOUCH_MAX_POINTS);
-  if (touchpad_pressed && touchpad_cnt > 0) {
+  uint8_t debounced_state = Touch_Get_XY(touchpad_x, touchpad_y, strength, &touchpad_cnt, CST328_LCD_TOUCH_MAX_POINTS);
+
+  if (debounced_state && touchpad_cnt > 0) {
     // Swapped for 90 degree rotation with invert on y
     data->point.x = map(TS_MAXY - touchpad_y[0], 0, TS_MAXY - TS_MINY, 0, 320);
     data->point.y = map(touchpad_x[0], TS_MINX, TS_MAXX, 0, 240);
@@ -61,24 +62,8 @@ void Lvgl_Touchpad_Read( lv_indev_drv_t * indev_drv, lv_indev_data_t * data )
     }
   }
 
-  // Time-based debounce filter for state transitions
-  if (touchpad_pressed && touchpad_cnt > 0) {
-    released_start_time = 0;
-    if (abs(data->point.x - last_touch_x) < 20 && abs(data->point.y - last_touch_y) < 20) { // filter position noise
-      data->state = LV_INDEV_STATE_PRESSED;
-      last_touch_x = data->point.x;
-      last_touch_y = data->point.y;
-    } else {
-      data->state = LV_INDEV_STATE_RELEASED;
-    }
-  } else {
-    if (released_start_time == 0) released_start_time = millis();
-    if (millis() - released_start_time >= TOUCH_DEBOUNCE_MS) {
-      data->state = LV_INDEV_STATE_RELEASED;
-    } else {
-      data->state = LV_INDEV_STATE_PRESSED;
-    }
-  }
+  // Set state based on debounced Touch_Get_XY return value
+  data->state = debounced_state ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
 }
 void example_increase_lvgl_tick(void *arg)
 {
