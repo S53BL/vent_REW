@@ -459,8 +459,8 @@ void updateTimeWifiAndExtCards() {
     bool ceOffline = sensorData.errorFlags[0] & ERR_HTTP;
 
     // Update EXT
-    lv_label_set_text_fmt(EXT_label1, "%.1f°", sensorData.extTemp);
-    lv_label_set_text_fmt(EXT_label2, "%.1f%%", sensorData.extHumidity);
+    lv_label_set_text(EXT_label1, (String(sensorData.extTemp, 1) + "°").c_str());
+    lv_label_set_text(EXT_label2, (String(sensorData.extHumidity, 1) + "%").c_str());
     lv_label_set_text_fmt(EXT_label3, "%d hPa", (int)sensorData.extPressure);
     lv_label_set_text_fmt(EXT_label4, "%d lx", (int)sensorData.extLux);
 
@@ -487,8 +487,8 @@ void updateCards() {
     bool ceOffline = sensorData.errorFlags[0] & ERR_HTTP;
 
     // Update EXT
-    lv_label_set_text_fmt(EXT_label1, "%.1f°", sensorData.extTemp);
-    lv_label_set_text_fmt(EXT_label2, "%.1f%%", sensorData.extHumidity);
+    lv_label_set_text(EXT_label1, (String(sensorData.extTemp, 1) + "°").c_str());
+    lv_label_set_text(EXT_label2, (String(sensorData.extHumidity, 1) + "%").c_str());
     lv_label_set_text_fmt(EXT_label3, "%d hPa", (int)sensorData.extPressure);
     lv_label_set_text_fmt(EXT_label4, "%d lx", (int)sensorData.extLux);
 
@@ -533,8 +533,8 @@ void updateCards() {
     } else {
         lv_label_set_text(UT_label1, "UT");
     }
-    lv_label_set_text_fmt(UT_label2, "%.1f°", sensorData.utTemp);
-    lv_label_set_text_fmt(UT_label3, "%.1f%%", sensorData.utHumidity);
+    lv_label_set_text(UT_label2, (String(sensorData.utTemp, 1) + "°").c_str());
+    lv_label_set_text(UT_label3, (String(sensorData.utHumidity, 1) + "%").c_str());
 
     // Update KOP
     lv_obj_set_style_bg_color(cards[ROOM_KOP], lv_color_hex(BTN_KOP_COLOR), 0);
@@ -548,14 +548,14 @@ void updateCards() {
     } else {
         lv_label_set_text(KOP_label1, "KOP");
     }
-    lv_label_set_text_fmt(KOP_label2, "%.1f°", sensorData.bathroomTemp);
-    lv_label_set_text_fmt(KOP_label3, "%.1f%%", sensorData.bathroomHumidity);
+    lv_label_set_text(KOP_label2, (String(sensorData.bathroomTemp, 1) + "°").c_str());
+    lv_label_set_text(KOP_label3, (String(sensorData.bathroomHumidity, 1) + "%").c_str());
 
     // Update DS
     lv_obj_set_style_bg_color(cards[ROOM_DS], lv_color_hex(BTN_DS_COLOR), 0);
     lv_label_set_text(DS_label1, "DS");
-    lv_label_set_text_fmt(DS_label2, "%.1f°", sensorData.localTemp);
-    lv_label_set_text_fmt(DS_label3, "%.1f%%", sensorData.localHumidity);
+    lv_label_set_text(DS_label2, (String(sensorData.localTemp, 1) + "°").c_str());
+    lv_label_set_text(DS_label3, (String(sensorData.localHumidity, 1) + "%").c_str());
     lv_label_set_text_fmt(DS_label4, "%d ppm", (int)sensorData.localCO2);
     lv_label_set_text(DS_label5, "---");
 
@@ -675,12 +675,8 @@ void updateWiFiIcon() {
     if (wifi_icon) {
         if (WiFi.status() == WL_CONNECTED && !(sensorData.errorFlags[0] & ERR_WIFI)) {
             lv_img_set_src(wifi_icon, &wifion);
-            Serial.printf("[WiFi] Status: %d, ErrorFlags: %d, Icon: wifion\n",
-                         WiFi.status(), sensorData.errorFlags[0]);
         } else {
             lv_img_set_src(wifi_icon, &wifioff);
-            Serial.printf("[WiFi] Status: %d, ErrorFlags: %d, Icon: wifioff\n",
-                         WiFi.status(), sensorData.errorFlags[0]);
         }
     }
 }

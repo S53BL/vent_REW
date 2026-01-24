@@ -20,28 +20,40 @@ extern void logEvent(String content);
 bool setupServer() {
     logEvent("HTTP:Setting up server endpoints");
     // Endpoint for receiving data from external unit
-    server.on("/data", HTTP_POST, [](AsyncWebServerRequest *request){
-        String body = request->arg("plain");
-        DynamicJsonDocument doc(512);
-        DeserializationError error = deserializeJson(doc, body);
-        if (error) {
-            request->send(400, "text/plain", "Invalid JSON");
-            return;
+    server.on("/data", HTTP_POST,
+        [](AsyncWebServerRequest *request){},
+        NULL,
+        [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+            static String body;
+            if (index == 0) body = "";
+            for (size_t i = 0; i < len; i++) {
+                body += (char)data[i];
+            }
+            if (index + len == total) {
+                Serial.println("HTTP: Received /data body: " + body);
+                DynamicJsonDocument doc(256);
+                DeserializationError error = deserializeJson(doc, body);
+                if (error) {
+                    Serial.println("HTTP: JSON parse error: " + String(error.c_str()));
+                    request->send(400, "text/plain", "Invalid JSON");
+                    return;
+                }
+                sensorData.extTemp = doc["temp"] | 0.0f;
+                sensorData.extHumidity = doc["humidity"] | 0.0f;
+                sensorData.extPressure = doc["pressure"] | 0.0f;
+                sensorData.extVOC = doc["voc"] | 0.0f;
+                sensorData.extLux = doc["lux"] | 0.0f;
+                Serial.println("HTTP: Parsed values: temp=" + String(sensorData.extTemp, 1) + " hum=" + String(sensorData.extHumidity, 1) + " pressure=" + String(sensorData.extPressure, 1) + " voc=" + String(sensorData.extVOC, 0) + " lux=" + String(sensorData.extLux, 0));
+                lastSEWReceive = millis();
+                request->send(200, "application/json", "{\"status\":\"OK\"}");
+                logEvent("HTTP:Recv SEW temp=" + String(sensorData.extTemp, 1) +
+                         " hum=" + String(sensorData.extHumidity, 1) +
+                         " pressure=" + String(sensorData.extPressure, 1) +
+                         " voc=" + String(sensorData.extVOC, 0) +
+                         " lux=" + String(sensorData.extLux, 0));
+            }
         }
-        sensorData.extTemp = doc["temp"] | 0.0f;
-        sensorData.extHumidity = doc["humidity"] | 0.0f;
-        sensorData.extPressure = doc["pressure"] | 0.0f;
-        sensorData.extVOC = doc["voc"] | 0.0f;
-        sensorData.extLux = doc["lux"] | 0.0f;
-        logEvent("HTTP:Recv SEW temp=" + String(sensorData.extTemp, 1) +
-                 " hum=" + String(sensorData.extHumidity, 1) +
-                 " pressure=" + String(sensorData.extPressure, 1) +
-                 " voc=" + String(sensorData.extVOC, 0) +
-                 " lux=" + String(sensorData.extLux, 0));
-        lastSEWReceive = millis();
-        request->send(200, "application/json", "{\"status\":\"OK\"}");
-        // sendToCEW() call removed as it's now parameterized
-    });
+    );
 
     // Heartbeat endpoint
     server.on("/api/ping", HTTP_GET, [](AsyncWebServerRequest *request){
