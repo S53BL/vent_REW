@@ -254,21 +254,20 @@ const char* HTML_DELETE_CONFIRM = R"rawliteral(
             background: #cc3333;
         }
         .btn-cancel {
-            background: #666;
+            background: #4da6ff;
             color: white;
         }
         .btn-cancel:hover {
-            background: #555;
+            background: #3a8ae6;
         }
     </style>
 </head>
 <body>
     <h1>Potrditev brisanja</h1>
     <div class="confirm">
-        <div class="warning">OPOZORILO: Ta operacija bo izbrisala vse datoteke starejše od %s!</div>
-        <p>To vključuje zgodovinske datoteke senzorjev, ventilatorjev in logov.</p>
+        <div class="warning">Ali res želite izbrisati vse datoteke starejše od %s?</div>
         <div class="buttons">
-            <a href="/delete?up_to=%s&confirm=yes" class="btn btn-confirm">Potrdi</a>
+            <a href="/delete?up_to=%s&confirm=yes" class="btn btn-confirm">Da, izbriši</a>
             <a href="/delete" class="btn btn-cancel">Prekliči</a>
         </div>
     </div>
